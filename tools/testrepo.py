@@ -9,6 +9,8 @@ import sys
 from pathlib import Path
 
 AUTHOR = "DocumentationDrifter Fixtures <fixtures@documentation-drifter.invalid>"
+# names the public copy on GitHub, published 2026-10-17 (ticket 11); republish it after any change to the labels
+PUBLIC_REPO = "kaan-kanadasi/DocumentationDrifter-testrepo"
 EPOCH = 1767225600  # starts at 2026-01-01T00:00:00Z, one minute per commit
 MB = 1024 * 1024
 

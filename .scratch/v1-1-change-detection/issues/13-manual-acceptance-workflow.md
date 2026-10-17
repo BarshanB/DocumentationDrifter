@@ -4,7 +4,7 @@
 
 **Blocked by:** 10 (Public deployment on Railway's free plan); 12 (Full conformance set against the reference service)
 
-**Status:** workflow written; the passing run now waits only for the public test repo (11), since the push (02) and the deploy (10) are done. Run it with target_url https://documentationdrifter-production.up.railway.app/system once DRIFTER_TEST_REPO is set.
+**Status:** ready to run: the push (02), the deploy (10) and the public test repo (11) are all done, and the workflow now defaults DRIFTER_TEST_REPO to kaan-kanadasi/DocumentationDrifter-testrepo. Run it with target_url https://documentationdrifter-production.up.railway.app/system. Expect its conformance step to fail on the labels until Kaan settles the three ticket 12 differences (skipped files kept in changes[], skips by file type, hidden paths); T-01 to T-07 against our service should pass.
 
 **Spec:** plan/spec-v1.1.md, user stories 54
 

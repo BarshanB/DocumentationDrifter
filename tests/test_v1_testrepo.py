@@ -11,7 +11,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 import testrepo  # noqa: E402
 
-PUBLIC_REPO = os.environ.get("DRIFTER_TEST_REPO", "")
+# names the published test repo, DRIFTER_TEST_REPO overrides it and an empty value skips the online tests
+PUBLIC_REPO = os.environ.get("DRIFTER_TEST_REPO", testrepo.PUBLIC_REPO)
 LOCAL_NAME = "fixtures/drifter-testrepo"
 
 
@@ -97,7 +98,7 @@ def test_mixed_commit_puts_every_path_in_exactly_one_place(local_api, built):
 def public_api(target, github_env):
     # reaches the public test repo through GitHub, in-process or at DRIFTER_TARGET_URL
     if not PUBLIC_REPO:
-        pytest.skip("DRIFTER_TEST_REPO is not set: the public test repo hasn't been created yet")
+        pytest.skip("DRIFTER_TEST_REPO is empty, so the online test-repo checks are off")
     return target
 
 
@@ -105,3 +106,16 @@ def public_api(target, github_env):
 @pytest.mark.parametrize("label", testrepo.LABELS)
 def test_label_online(public_api, built, label):
     check(public_api, PUBLIC_REPO, label, built[2]["labels"][label])
+
+
+@pytest.mark.network
+def test_the_public_repo_holds_the_built_commits(public_api, built):
+    # catches a builder change that wasn't republished, the public main must equal a fresh build's main
+    import subprocess
+
+    out = subprocess.run(
+        ["git", "ls-remote", f"https://github.com/{PUBLIC_REPO}", "refs/heads/main"],
+        capture_output=True, text=True, timeout=60, check=True,
+    ).stdout.split()
+    fresh = subprocess.run(["git", "rev-parse", "main"], cwd=built[1], capture_output=True, text=True, check=True).stdout.strip()
+    assert out and out[0] == fresh, f"public main {out[:1]}, fresh build {fresh}"

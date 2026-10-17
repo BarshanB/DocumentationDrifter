@@ -21,7 +21,7 @@ jobs:
     timeout-minutes: 30
     env:
       DRIFTER_TARGET_URL: ${{ inputs.target_url || vars.DRIFTER_TARGET_URL }}
-      DRIFTER_TEST_REPO: ${{ vars.DRIFTER_TEST_REPO }}
+      DRIFTER_TEST_REPO: ${{ vars.DRIFTER_TEST_REPO || 'kaan-kanadasi/DocumentationDrifter-testrepo' }}
       DRIFTER_REQUIRE_REFERENCE: "1"
       DRIFTER_REQUIRE_ANONYMOUS: "1"
     steps:
@@ -36,13 +36,6 @@ jobs:
 
       - name: Install pinned requirements
         run: pip install -r requirements.txt
-
-      - name: Check the test repo is configured
-        run: |
-          if [ -z "$DRIFTER_TEST_REPO" ]; then
-            echo "::error::set the repository variable DRIFTER_TEST_REPO to the public test repo (owner/name)"
-            exit 1
-          fi
 
       # rides out a cold start, a sleeping free-tier service can take a while to answer
       - name: Warm the service under test

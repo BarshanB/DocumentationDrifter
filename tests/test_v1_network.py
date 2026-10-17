@@ -132,7 +132,8 @@ CASES = {
 
 
 def label_cases():
-    # adds every test-repo label once the public test repo exists
+    # adds every test-repo label only when DRIFTER_TEST_REPO is set explicitly (the acceptance workflow does),
+    # since the reference service differs on skipped files and hidden paths until Kaan decides (ticket 12)
     repo = os.environ.get("DRIFTER_TEST_REPO", "")
     if not repo:
         return {}

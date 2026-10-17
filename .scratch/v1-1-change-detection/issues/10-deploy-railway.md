@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Tracer: one commit analysed, saved and served back, and a missing repository refused)
 
-**Status:** done. Deployed on Railway on 2026-10-17 from `main` (25e4d06) at https://documentationdrifter-production.up.railway.app, port 8080. Health, Hello-World with a byte-identical GET, and all 15 conformance cases were checked against it from Chrome. Sleep when idle (Serverless) is still off, waiting for Kaan.
+**Status:** done. Deployed on Railway on 2026-10-17 from `main` (25e4d06, then 954459a with the course routes) at https://documentationdrifter-production.up.railway.app, port 8080. Health, Hello-World with a byte-identical GET, and all 15 conformance cases were checked against it from Chrome. Sleep when idle (Serverless) is still off, waiting for Kaan.
 
 **Spec:** plan/spec-v1.1.md, user stories 9, 55, 56
 

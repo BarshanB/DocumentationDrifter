@@ -6,7 +6,7 @@
 
 **Status:** done. The reference service was probed on 2026-10-17: an unknown or malformed analysis_id gives 404 `{"code": "ANALYSIS_NOT_FOUND", "message": "analysis <id> does not exist"}`, and ours now matches, as do the validation messages.
 
-**Spec:** plan/spec-v1.1.md, user stories 8, 10, 11, 12, 13, 38
+**Spec:** docs/plan/spec-v1.1.md, user stories 8, 10, 11, 12, 13, 38
 
 - [x] A missing commit_id gives 400 INVALID_REQUEST with the message 'commit_id is required' (AC-07).
 - [x] A repository that isn't owner/name gives 400 INVALID_REQUEST. The owner is letters, digits and hyphens; the name also allows dots and underscores. Examples are not-a-repo, three segments, a space, an empty string and an owner containing dots.

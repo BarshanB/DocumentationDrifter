@@ -6,7 +6,7 @@
 
 **Status:** done. Deployed on Railway on 2026-10-17 from `main` (25e4d06, then 954459a with the course routes) at https://documentationdrifter-production.up.railway.app, port 8080. Health, Hello-World with a byte-identical GET, and all 15 conformance cases were checked against it from Chrome. Sleep when idle (Serverless) is still off, waiting for Kaan.
 
-**Spec:** plan/spec-v1.1.md, user stories 9, 55, 56
+**Spec:** docs/plan/spec-v1.1.md, user stories 9, 55, 56
 
 - [x] The image builds locally, includes git and holds no credentials. Its run store location is writable.
 - [x] The container serves only the v1 app; v0's webhook routes can't be reached.

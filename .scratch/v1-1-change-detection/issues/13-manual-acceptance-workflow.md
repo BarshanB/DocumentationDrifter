@@ -6,7 +6,7 @@
 
 **Status:** ready to run: the push (02), the deploy (10) and the public test repo (11) are all done. Run it with target_url https://documentationdrifter-production.up.railway.app/system. It runs T-01 to T-07 against the public test repo (the default in `tools/testrepo.py`) and the conformance set without the labels; comparing the labels with the reference service is behind DRIFTER_LABEL_CONFORMANCE=1, off until Kaan settles the three ticket 12 differences.
 
-**Spec:** plan/spec-v1.1.md, user stories 54
+**Spec:** docs/plan/spec-v1.1.md, user stories 54
 
 - [x] The workflow runs on manual dispatch, with an optional schedule, and has read-only access to contents.
 - [x] Its warm-up retries health long enough to ride out a cold start of about a minute, and fails with a clear message if the service never answers.

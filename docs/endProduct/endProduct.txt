@@ -16,8 +16,8 @@ Read it to understand WHY THE SYSTEM EXISTS (keeping AI model documentation curr
 crosses its boundary, and what it must never do, such as change a repository, run a repository's
 code, or make a compliance judgement that belongs to a person.
 
-What a version actually builds is set by plan/roadmap.md, that version's spec (for v1.1,
-plan/spec-v1.1.md) and the decision log in plan/. Where they disagree with this document, they win.
+What a version actually builds is set by docs/plan/roadmap.md, that version's spec (for v1.1,
+docs/plan/spec-v1.1.md) and the decision log in docs/plan/. Where they disagree with this document, they win.
 Even firm-sounding lines here have already changed: section 8.2 keeps GenAI out of the running
 system, yet the roadmap brings an LLM in from v1.2. The document also contradicts itself in places;
 the last section lists where.
@@ -92,7 +92,7 @@ Q2 COMMON SCOPE AND COST ESTIMATE
 2.1 SYSTEM BOUNDARY
 
 [DIAGRAM] Diagram 01: common system boundary (who is inside the tracker, who is outside, and what crosses the line)
-          open endProduct/01-system-boundary.png
+          open docs/endProduct/01-system-boundary.png
 
 2.2 SYSTEM BOUNDARY
 
@@ -246,19 +246,19 @@ are also excluded.
 3.2 BEHAVIORAL AND INFORMATION MODELS
 
 [DIAGRAM] Diagram 02 (M1): system overview, v1 boundary and data path
-          open endProduct/02-M1-data-flow-and-context.png
+          open docs/endProduct/02-M1-data-flow-and-context.png
 
 [DIAGRAM] Diagram 03 (M2): analysis run lifecycle (finite-state model)
-          open endProduct/03-M2-analysis-run-lifecycle.png
+          open docs/endProduct/03-M2-analysis-run-lifecycle.png
 
 [DIAGRAM] Diagram 04 (M3): file-level finding rule (decision / policy model)
-          open endProduct/04-M3-file-level-finding-rule.png
+          open docs/endProduct/04-M3-file-level-finding-rule.png
 
 [DIAGRAM] Diagram 05 (M4): v1 run file (entity / schema model)
-          open endProduct/05-M4-run-file-schema.png
+          open docs/endProduct/05-M4-run-file-schema.png
 
 [DIAGRAM] Diagram 06 (M5): finding review in v1 (workflow model)
-          open endProduct/06-M5-finding-review-workflow.png
+          open docs/endProduct/06-M5-finding-review-workflow.png
 
 3.3 MODEL EXPLANATION
 
@@ -486,7 +486,7 @@ Q7 TEAM SYSTEM DESIGN
 7.1 ARCHITECTURE AND DATA FLOW
 
 [DIAGRAM] Diagram 07: the team's hand-drawn architecture sketch
-          open endProduct/07-team-architecture-sketch.png
+          open docs/endProduct/07-team-architecture-sketch.png
 
 7.2 DESIGN DECISIONS
 

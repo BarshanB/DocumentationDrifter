@@ -5,7 +5,7 @@ A service that looks at what changed between two commits of a public GitHub repo
 ## Where the project is heading
 
 **End product**:
-The finished system that the Phase 2 specification describes, kept in [endProduct/](endProduct/README.md) as text plus its seven diagrams. Each version takes inspiration from it but may differ from it; the roadmap says which version builds which part.
+The finished system that the Phase 2 specification describes, kept in [docs/endProduct/](docs/endProduct/README.md) as text plus its seven diagrams. Each version takes inspiration from it but may differ from it; the roadmap says which version builds which part.
 _Avoid_: the spec (when only the end product is meant), final version (that is the last version we build, which may differ from the end product)
 
 **Version**:
@@ -36,7 +36,7 @@ The commit the head is compared against: `base_commit` if given, otherwise the h
 _Avoid_: parent (when the base was given explicitly)
 
 **First audit**:
-An analysis with no base commit, where every file counts as added. In v1 this happens only when the head is a root commit; a new-branch push sends the merge base with the default branch instead (decision 15, see [plan/new-branch-base.md](plan/new-branch-base.md)).
+An analysis with no base commit, where every file counts as added. In v1 this happens only when the head is a root commit; a new-branch push sends the merge base with the default branch instead (decision 15, see [docs/plan/new-branch-base.md](docs/plan/new-branch-base.md)).
 _Avoid_: initial scan
 
 ## Parts of the service

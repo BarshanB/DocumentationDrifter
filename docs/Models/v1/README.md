@@ -1,6 +1,6 @@
 # v1 models
 
-Five models of v1, the change detection API described in [plan/roadmap.md](../../plan/roadmap.md) and [plan/github-connector-steps.md](../../plan/github-connector-steps.md). They follow MAGE: each model starts from one engineering question and keeps only what that question needs. They narrow the Phase 2 models (M1 to M5 in [endProduct/](../../endProduct/README.md)) to what v1 actually builds, and they use the terms in [CONTEXT.md](../../CONTEXT.md).
+Five models of v1, the change detection API described in [docs/plan/roadmap.md](../../plan/roadmap.md) and [docs/plan/github-connector-steps.md](../../plan/github-connector-steps.md). They follow MAGE: each model starts from one engineering question and keeps only what that question needs. They narrow the Phase 2 models (M1 to M5 in [docs/endProduct/](../../endProduct/README.md)) to what v1 actually builds, and they use the terms in [CONTEXT.md](../../../CONTEXT.md).
 
 v1 now ships in two steps (decision log, 2026-10-17): **v1.1** is the git change detection, and **v1.2** adds an LLM that decides drift and fills `issues[]`. Parts that only v1.2 has are labelled v1.2 in the diagrams.
 

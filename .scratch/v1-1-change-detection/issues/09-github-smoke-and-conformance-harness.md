@@ -9,7 +9,7 @@
 - the live schema test and the four conformance cases are written but have only skipped here. CI sets DRIFTER_REQUIRE_REFERENCE=1, so they run and fail loudly there.
 - recorded: this workspace injects GitHub credentials outside git's control (an anonymous `git ls-remote` of the private repo succeeds), so the private-repo check skips here with that reason. CI checks out with persist-credentials false and sets DRIFTER_REQUIRE_ANONYMOUS=1, so it runs there. The recording credential helper was never called.
 
-**Spec:** plan/spec-v1.1.md, user stories 2, 14, 49, 50, 51
+**Spec:** docs/plan/spec-v1.1.md, user stories 2, 14, 49, 50, 51
 
 - [x] All network tests share one skip marker. A quick reachability check skips them when GitHub can't be reached, and they also skip when the suite is told to stay offline (for local runs; the PR workflow leaves it off and runs them). The local suite always runs.
 - [x] octocat/Hello-World at 7fd1a60, through the default remote base URL, returns head_commit 7fd1a60b… and base_commit 553c2077…, its first parent, with the README change as MODIFIED. The run file is saved and can be fetched.

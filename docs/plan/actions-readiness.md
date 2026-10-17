@@ -1,6 +1,6 @@
 # GitHub_Connector, Phase 3 scope and GitHub Actions readiness
 
-Written 2026-10-17 against `main` @ `76eb691`, the v1 models in [Models/v1](../Models/v1/README.md) and the [roadmap](roadmap.md). It answers three questions from Kaan: is `Source/GitHub_Connector/` aligned with what the Phase 3 docs and pictures say, how can the architecture pair with GitHub Actions later without building it now, and do the v1 pictures make scaling easier after Phase 3. Every finding below was checked twice: once by the reviewer who found it and once by a second reviewer who tried to refute it. Where the second reviewer corrected a claim, the corrected version is the one written here. Line numbers and quotes from the roadmap and guide in sections 1 to 3 describe those files before the 2026-10-17 edits listed under "Edits applied".
+Written 2026-10-17 against `main` @ `76eb691`, the v1 models in [docs/Models/v1](../Models/v1/README.md) and the [roadmap](roadmap.md). It answers three questions from Kaan: is `Source/GitHub_Connector/` aligned with what the Phase 3 docs and pictures say, how can the architecture pair with GitHub Actions later without building it now, and do the v1 pictures make scaling easier after Phase 3. Every finding below was checked twice: once by the reviewer who found it and once by a second reviewer who tried to refute it. Where the second reviewer corrected a claim, the corrected version is the one written here. Line numbers and quotes from the roadmap and guide in sections 1 to 3 describe those files before the 2026-10-17 edits listed under "Edits applied".
 
 ## Short answers
 
@@ -24,7 +24,7 @@ The roadmap says v1 lives "in `Source/GitHub_Connector/` next to the v0 webhook 
 
 - **One deployable app, and it is not `gitHook.app`.** `gitHook.app` has a lifespan that creates `drifter.db` at startup, a root `/health` and `/openapi.json`, and a public `/hooks/github`. Slice 1 checks `/system/openapi.json` against the pod's. So v1 needs its own `FastAPI(openapi_url="/system/openapi.json")` app in a new module, with no lifespan and all routes on `APIRouter(prefix="/system")`, and the Dockerfile serves only that app. Including `gitHook.app.router` later would also pull in its lifespan and second docs pages (checked at runtime), so in v4, when the webhook is wired (roadmap decision 14), the receiver gets its own router first.
 - **Different module names.** `models.py`, `store.py`, `parse.py` and `config.py` are the obvious names for v1's API models, run store, diff parser and rules file, but each already means the v0 thing. Suggested v1 names: `api.py`, `analysis.py`, `fetch.py`, `rules.py` plus its rules file, `runs.py` and `schemas.py`.
-- **Two meanings of "GitHub connector".** In M1 the connector is the outbound git fetcher inside the v1 boundary. The folder of the same name holds the inbound webhook, which M1 draws outside it. One line in `Models/v1/README.md` that maps each M1 box to its file fixes this without renaming anything.
+- **Two meanings of "GitHub connector".** In M1 the connector is the outbound git fetcher inside the v1 boundary. The folder of the same name holds the inbound webhook, which M1 draws outside it. One line in `docs/Models/v1/README.md` that maps each M1 box to its file fixes this without renaming anything.
 - **Plain `def` handlers.** `receive()` is `async def` and calls synchronous code (`gitHook.py:51,87`). If v1 copies that with `subprocess.run`, every git call blocks the event loop and requests run one at a time, `/system/health` included. v1 handlers should be plain `def`, so FastAPI runs them in its thread pool.
 - **Tests.** The autouse fixture in `tests/conftest.py:18-33` writes `test.db` into `tmp_path` for every test. v1's fixture repos must live in `tmp_path / "repo"`, or `git add -A` commits that file and breaks exact `changes[]` assertions. The `client` fixture name is also taken.
 - **`.gitignore`** has no `runs/` entry, so local run files from slice 9 would show up in `git status`.
@@ -181,7 +181,7 @@ Kaan chose "Apply all" on 2026-10-17, so items 1 to 3 are now in the roadmap, th
 2. **Guide and plans.** The new-branch row in `github-connector-steps.md` becomes the merge base with the default branch. Mark `commit-fetcher-plan.md`'s stubs table and `documentation-drifter-plan.md:71` as superseded.
 3. **Models**
    - The M1, M2, M3, M4 and M5 edits in the table above, with the PNGs regenerated.
-   - A box-to-file line in `Models/v1/README.md`.
+   - A box-to-file line in `docs/Models/v1/README.md`.
    - Add "connector", "run store" and "delivery store" to `CONTEXT.md`.
 4. **For the team, not for me to change:** the v0 comment at `parse.py:41` (a zero `before` is no longer a first audit, decision 15; done 2026-10-17, the property is now `has_before`), and whether `Source/LLM_Shell/` is the start of the v1.2 LLM work (ask Muhammad).
 

@@ -6,7 +6,7 @@
 
 **Status:** done (a symlink-to-file switch follows M3 and shows as TYPE_CHANGED until ticket 12 pins what the reference service does)
 
-**Spec:** plan/spec-v1.1.md, user stories 22, 23, 24, 25, 26, 36, 47
+**Spec:** docs/plan/spec-v1.1.md, user stories 22, 23, 24, 25, 26, 36, 47
 
 - [x] A moved file, unchanged or lightly edited, gives one RENAMED change, with path set to the new path and old_path to the old one, not a delete plus an add (T-03). A move below git's default 50% similarity gives one DELETED change and one ADDED change.
 - [x] A copy of an existing file, with the original kept, gives ADDED, and COPIED never appears. Every change that isn't a rename has old_path null.

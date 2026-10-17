@@ -1,6 +1,6 @@
 # To do
 
-Items from the 2026-10-17 review of v1.1, left for later. Open questions for the pod are in the [decision log](plan/decisions-2026-10-17.md) ("Still open"), and the remaining ticket work is in `.scratch/v1-1-change-detection/issues/`.
+Items from the 2026-10-17 review of v1.1, left for later. Open questions for the pod are in the [decision log](docs/plan/decisions-2026-10-17.md) ("Still open"), and the remaining ticket work is in `.scratch/v1-1-change-detection/issues/`.
 
 ## Waiting for Kaan's decision
 

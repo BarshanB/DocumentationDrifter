@@ -77,7 +77,7 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 **Answer:** Yes. CONTEXT.md sits at the repo root and defines **Reference service**: the pod's live v1 service that our output must match.
 **Why:** The glossary then lives with the code it describes, and "the pod" was being used without a definition.
 
-**Q17 · Planning files in the repo.** Commit `plan/` and `Models/v1/`?
+**Q17 · Planning files in the repo.** Commit `docs/plan/` and `docs/Models/v1/`?
 **Answer:** Yes, on the `kaan_v1` branch, with no merge until Kaan says so.
 **Why:** Teammates can then work from the same plan and decisions on GitHub.
 

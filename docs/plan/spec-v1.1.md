@@ -1,6 +1,6 @@
 # Spec: v1.1 change detection API
 
-Status: ready-for-agent · Written 2026-10-17 from the [roadmap](roadmap.md) v1 section and the [decision log](decisions-2026-10-17.md). Terms are as defined in [CONTEXT.md](../CONTEXT.md).
+Status: ready-for-agent · Written 2026-10-17 from the [roadmap](roadmap.md) v1 section and the [decision log](decisions-2026-10-17.md). Terms are as defined in [CONTEXT.md](../../CONTEXT.md).
 
 ## Problem Statement
 

@@ -4,7 +4,7 @@ A program to detect documentation drift in a GitHub repo. Designed for ECE30861 
 First Deliverable stage functions essentially as an LLM wrapper that tracks GitHub changes. Very rudimentary, perhaps we can begin to work on our mapping scheme.
 ## v1.1 change detection API
 
-`POST /system/analyze` takes `{"repository": "owner/name", "commit_id": "<7-40 hex>", "base_commit": "<optional>"}` and returns every changed file of a public GitHub repo with its change type and category. `GET /system/analysis/{analysis_id}` returns the saved run byte for byte. The contract matches the reference service; see `plan/spec-v1.1.md`.
+`POST /system/analyze` takes `{"repository": "owner/name", "commit_id": "<7-40 hex>", "base_commit": "<optional>"}` and returns every changed file of a public GitHub repo with its change type and category. `GET /system/analysis/{analysis_id}` returns the saved run byte for byte. The contract matches the reference service; see `docs/plan/spec-v1.1.md`.
 
 **Route list.** Opening plain `/system` returns the list of routes. The reference service has no such route; it stays out of the OpenAPI document.
 

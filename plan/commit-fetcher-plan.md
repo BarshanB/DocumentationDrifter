@@ -50,11 +50,11 @@ Renames: *(updated 2026-10-17 to match the pod's contract)* a rename is one `REN
 | Resolve head | `git rev-parse --verify {head}^{commit}` | `GET /repos/{o}/{r}/commits/{head}` → `sha` |
 | Default base | `git rev-parse {head}^` (first parent; none for a root commit) | `parents[0].sha` |
 | Changed files | `git diff --name-status -M {base} {head}` | `GET /compare/{base}...{head}` → `files[]` |
-| Hunks | `git diff -U0 -M {base} {head}` parsed with `unidiff` | each file's `patch` (missing if too large) |
+| ~~Hunks~~ | ~~`git diff -U0 -M {base} {head}` parsed with `unidiff`~~ *Decided 2026-10-17 (Q2): dropped from v1.1.* | each file's `patch` (missing if too large) |
 | File list | `git ls-tree -r --name-only {sha}` | `GET /git/trees/{sha}?recursive=1` |
 | File content | `git show {sha}:{path}` | `GET /contents/{path}?ref={sha}` (raw) |
 
-`-U0` gives exact changed line ranges with no context lines, which is what the overlap check in M3 needs.
+*Decided 2026-10-17 (Q2, Q3):* hunks are dropped, because nothing in the contract reads them; v1.2 may pass the plain `git diff` text to the LLM. `-M` is used without `-C`, so COPIED is never produced.
 
 ## Errors (maps to the spec codes)
 
@@ -86,7 +86,7 @@ Renames: *(updated 2026-10-17 to match the pod's contract)* a rename is one `REN
 
 Built from tiny repos the tests create with `git init` in `tmp_path`, so they need no network and the expected answer is exact:
 
-1. Modify one line → one `MODIFIED` file, one hunk at that line.
+1. Modify one line → one `MODIFIED` file.
 2. Add a file, delete a file → `ADDED` and `DELETED`.
 3. Rename → `old_path` set.
 4. No base given → base is the head's parent.

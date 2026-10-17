@@ -55,7 +55,7 @@ git fetch --quiet --filter=blob:none origin {commit_id}   # only needed if not a
 git rev-parse --verify {commit_id}^{commit}               # → full 40-hex SHA
 ```
 
-GitHub lets a client fetch any reachable SHA by its full id (tested). A short SHA can only be resolved after the clone, which already contains every branch. An unknown SHA makes `rev-parse` exit 128 (tested), which maps to **404 `COMMIT_NOT_FOUND`**.
+GitHub lets a client fetch any reachable SHA by its full id (tested). A short SHA can only be resolved after the clone, which already contains every branch. An unknown SHA makes `rev-parse` exit 128 (tested), which maps to **404 `COMMIT_NOT_FOUND`**. *Decided (Q6):* a short SHA that can't be fetched (not on a branch or tag) or is ambiguous gets the same 404, with a message asking for the full 40-character SHA. *Decided (Q5):* any `base_commit` is accepted and diffed exactly as given.
 
 **Base** depends on where the request came from:
 
@@ -130,13 +130,13 @@ git show {sha}:{path}          # raw bytes; downloads that one blob on demand
 
 ```bash
 git diff --name-status -M {base} {head}   # A / M / D / R per file
-git diff -U0 -M {base} {head}             # exact changed line ranges, parsed with unidiff
 ```
 
-- Apply the step 4 filter here too, so a change to `.gitignore` never appears in `changes[]`.
+- Apply the step 4 filter here too, so a change to `.gitignore` never appears in `changes[]`. *Decided (Q4):* the filter checks each side of a rename. A rename out of a hidden path is ADDED, a rename into one is DELETED, and a hidden path never appears as `old_path`.
+- *Decided (Q3):* `-M` only, at git's default 50% similarity, so COPIED never appears.
 - Renames: emit **one** `RENAMED` change with `old_path` set. *Contract:* this replaces the earlier "two changes" rule from M4. The M0 build order ("Rename yields ONE change with old_path set, not a delete + add"), the pod's live enum and tester case T-03 all expect one change. Schema v14's *"renames are not followed"* still holds for mapping: the detector treats the new path as unrelated to the old one.
 - With no base (first audit), compare against the empty tree, so every file counts as added.
-- `-U0` gives hunks with no context lines, which is what M3's overlap rule needs: *"Hunk overlap, not line numbers."*
+- *Decided (Q2):* no `-U0` hunks and no `unidiff` in v1.1, because nothing in the contract reads them. v1.2 may pass the plain `git diff` text to the LLM.
 
 ## Step 8: Hand it on and clean up
 
@@ -164,11 +164,11 @@ Build tiny repos in `tmp_path` with `git init`. Also add the nine cases from the
 
 ## Tools
 
-The same choices as the fetcher plan: the **git CLI** through `subprocess`, **`unidiff`** for hunks, **dataclasses** for now (Pydantic once the API lands), **`httpx`** only for the REST fallback, and **`pytest`**. The hidden-file filter, file categories and binary check are plain Python and need no extra libraries.
+The same choices as the fetcher plan: the **git CLI** through `subprocess`, **dataclasses** for now (Pydantic once the API lands), **`httpx`** only for the REST fallback, and **`pytest`**. The hidden-file filter, file categories and binary check are plain Python and need no extra libraries.
 
 ## Open points for the pod
 
-1. Should `.github/` docs be excluded? The recommendation above is yes for v1.
-2. Mapping file name: `doctracker.yml`, not hidden.
+1. ~~Should `.github/` docs be excluded?~~ *Decided:* yes for v1 (roadmap decision 9).
+2. Mapping file name: `doctracker.yml`, not hidden. Needed only once the mapping lands, in v1.3 or v2 (Q10).
 3. Diff PRs from the merge base rather than `pull_request.base.sha`?
 4. The path rules for DESIGN / ARCHITECTURE / SPECIFICATION / REQUIREMENT.

@@ -2,6 +2,8 @@
 
 Five models of v1, the change detection API described in [plan/roadmap.md](../../plan/roadmap.md) and [plan/github-connector-steps.md](../../plan/github-connector-steps.md). They follow MAGE: each model starts from one engineering question and keeps only what that question needs. They narrow the Phase 2 models (M1 to M5 in `phase2.pdf`) to what v1 actually builds, and they use the terms in [CONTEXT.md](../../CONTEXT.md).
 
+v1 now ships in two steps (decision log, 2026-10-17): **v1.1** is the git change detection, and **v1.2** adds an LLM that decides drift and fills `issues[]`. Parts that only v1.2 has are labelled v1.2 in the diagrams.
+
 | Model | MAGE class | Question |
 |---|---|---|
 | [M1 · Context and data flow](M1-context.md) | Structural | What is inside v1, what is outside it, and what data crosses the boundary? |
@@ -28,6 +30,7 @@ All v1 code goes in `Source/GitHub_Connector/`, in new modules beside the v0 fil
 | M1 GitHub connector | `fetch.py` |
 | M1 Classifier, M3 rules | `rules.py` and its rules file |
 | M1 Run store | `runs.py` |
+| M1 LLM drift check (v1.2) | a new module behind one function, provider and model in config (name not fixed yet) |
 | M4 records | `schemas.py` |
 | M1 Webhook receiver (dashed) | v0's `gitHook.py`, `parse.py`, `store.py`, `models.py` and `config.py`, which v1 neither serves nor imports |
 

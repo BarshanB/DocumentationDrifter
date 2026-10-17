@@ -4,6 +4,8 @@ Scanned 2026-10-16 at `main` @ `5b74560`. Sources: the repo (README, `Skills/CLA
 
 > *Superseded in part (2026-10-17).* This is a snapshot from `5b74560`. Where it differs from the [roadmap](roadmap.md), the roadmap wins. In particular, the webhook and GitHub App path is v4, after Phase 5 (roadmap decision 14), the v3 GitHub Action is the only Phase 5 trigger, and an Action's head and base follow [guide step 3](github-connector-steps.md).
 
+> *Superseded (2026-10-17, [decision log](decisions-2026-10-17.md)).* The detection design below (hand-written rule, hunk overlap, section selectors, a confidence value) no longer applies. An LLM decides drift from v1.2 (Q1, Q9), there is no mapping file before v1.3 or v2 (Q10), hunks are dropped (Q2), `Finding` has no confidence field (Q13), and the error codes follow the pod's contract plus `LLM_UNAVAILABLE` (Q16). Read the [roadmap](roadmap.md) for the current plan; this file is kept as history.
+
 ## 1. What we're building, in one paragraph
 
 A **read-only web service** that takes a public GitHub repo plus a head commit (and an optional base commit), works out what changed between the two, and uses an **authored mapping file in the repo** (doc section ↔ code selectors) to flag documentation that is now **missing or outdated**. Every finding is `PENDING_REVIEW` for a human. Each run is saved as one JSON file. A **GitHub Action** calls the service on push or PR and posts the result back. No LLM runs inside the service (spec §8.2); detection is rule-based and repeatable.

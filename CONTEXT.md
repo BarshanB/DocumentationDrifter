@@ -54,8 +54,12 @@ The kind of file a change touches, such as IMPLEMENTATION, DOCUMENTATION or OTHE
 _Avoid_: change category (in prose), file type
 
 **Skipped file**:
-A changed path that could not be checked, because it is binary, too large or not UTF-8, and is listed with a reason.
+A changed path that could not be checked, because it is binary, too large, not UTF-8 or over the doc budget, and is listed with a reason.
 _Avoid_: unparsed, failed file
+
+**Doc budget** (from v1.2):
+The most documentation text sent to the LLM in one analysis (200 KB, set in config); docs past it are skipped files.
+_Avoid_: doc limit, context cap
 
 **Ignored path**:
 A hidden path, symlink or submodule that is out of scope and not listed anywhere.
@@ -64,7 +68,7 @@ _Avoid_: excluded file (it suggests a skipped file)
 ## Findings (from v1.2)
 
 **Finding**:
-A flagged doc file whose related code changed, waiting for human review.
+A doc file the LLM judges missing or outdated because of the changes, waiting for human review.
 _Avoid_: issue, warning, alert
 
 **Mapping**:

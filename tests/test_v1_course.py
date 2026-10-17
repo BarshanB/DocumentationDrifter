@@ -18,6 +18,7 @@ def setup(api, session_id: str, **extra):
 
 
 def report(api, session_id: str):
+    # asks for a session's report the way the course tester does
     return api.get("/system/test/report", params={"session_id": session_id})
 
 
@@ -117,11 +118,12 @@ def test_report_has_the_reference_shape(api, v1_env):
     code = body["coverage"]["code"]
     assert set(code) == {"covered", "total", "basis"}
     assert isinstance(code["covered"], int) and isinstance(code["total"], int)
-    assert 0 < code["covered"] <= code["total"]
+    assert 0 <= code["covered"] <= code["total"] and code["total"] > 0
     assert "GitHub_Connector" in code["basis"] and "line coverage" in code["basis"]
 
 
 def covered(api, sid: str) -> int:
+    # reads just the covered count from a report
     return report(api, sid).json()["coverage"]["code"]["covered"]
 
 
@@ -149,6 +151,15 @@ def test_a_session_counts_only_lines_run_since_its_own_setup(api, make_repo):
     assert covered(api, late) < covered(api, early)
 
 
+def test_asking_for_a_report_does_not_change_it(api, v1_env):
+    # matches the reference service, whose count stayed put across back-to-back reports
+    sid = new_id()
+    setup(api, sid)
+    first = covered(api, sid)
+    assert covered(api, sid) == first
+    assert covered(api, sid) == first
+
+
 def test_the_total_stays_the_same_across_sessions(api, v1_env):
     a, b = new_id("a"), new_id("b")
     setup(api, a)
@@ -161,8 +172,9 @@ def test_only_the_v1_modules_are_counted():
     from GitHub_Connector import course
 
     names = {p.rsplit("/", 1)[-1].rsplit("\\", 1)[-1] for p in course.Statements(course.PACKAGE_DIR).files()}
-    assert {"api.py", "analysis.py", "fetch.py", "course.py"} <= names
+    assert {"api.py", "analysis.py", "fetch.py"} <= names
     assert not names & {"gitHook.py", "parse.py", "store.py", "models.py", "config.py", "git.py"}
+    assert "course.py" not in names, "the course routes would count their own lines"
 
 
 def test_analyses_are_unchanged_while_a_session_is_open(api, make_repo):

@@ -4,11 +4,11 @@
 
 **Blocked by:** 09 (GitHub and the reference service: network smoke test, anonymous not-found, and the conformance harness)
 
-**Status:** done (2026-10-17). Every shape was probed on the reference service first: 201 `{session_id}`, 409 for a repeated id, 400 and 404 bodies of `{message, source: "system"}` with the reference's exact messages, and `TestSetupRequest` copied field for field. Nine error cases and a setup-then-report case joined the conformance set, and all of them matched the reference when checked from Chrome. One deliberate difference: a setup with no body answers "body is required", where the reference says " is required" with an empty field name. It is not in the conformance set until Kaan agrees to record it.
+**Status:** done except the offline schema capture (2026-10-17). Every shape was probed on the reference service first: 201 `{session_id}`, 409 for a repeated id, 400 and 404 bodies of `{message, source: "system"}` with the reference's exact messages, and `TestSetupRequest` copied field for field. Twelve error cases and a setup-then-report case joined the conformance set (the report compared by keys and value types, since the counts describe two codebases), and the first nine and the setup flow matched the reference when checked from Chrome; the other three were probed by hand with the same answers. One deliberate difference: a setup with no body answers "body is required", where the reference says " is required" with an empty field name. It is not in the conformance set until Kaan agrees to record it.
 
 **Spec:** plan/spec-v1.1.md, user stories 57
 
-- [x] Both routes are on the /system router, with request and response schemas copied from the reference service's OpenAPI, and the offline schema test covers them.
+- [ ] Both routes are on the /system router, with request and response schemas copied from the reference service's OpenAPI, and the offline schema test covers them. (Partly: the routes and `TestSetupRequest` are copied verbatim from the live document, the reference declares no response schemas so neither do we, and `TestSetupRequest` is in `SHARED_MODELS`. The offline comparison still skips until someone who can reach the reference runs `python tests/reference.py capture`.)
 - [x] A report for an unknown session gives 404 with a body of exactly a message and source system.
 - [x] A malformed setup body, or a missing session_id, gets the status and body that a live probe of the reference service shows. The INVALID_REQUEST mapping is not assumed to apply here.
 - [x] A well-formed setup request is accepted with the status and response shape a live probe of the reference service shows. Nothing beyond that is assumed about what setup does.

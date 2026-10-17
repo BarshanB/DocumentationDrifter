@@ -16,13 +16,14 @@ from pydantic import BaseModel, Field
 
 PACKAGE = "GitHub_Connector"
 PACKAGE_DIR = Path(__file__).resolve().parent
-# names v0's webhook receiver files, which share the package but never run in the /system app
-V0_MODULES = frozenset({"config.py", "git.py", "gitHook.py", "models.py", "parse.py", "store.py"})
+# leaves out v0's webhook receiver files, which share the package but never run in the /system app,
+# and this file, so a report never counts the lines that build it (a new v0 file must be added here)
+UNCOUNTED = frozenset({"config.py", "git.py", "gitHook.py", "models.py", "parse.py", "store.py", "course.py"})
 
 # words the report's basis, the reference service's sentence with our package and method
 BASIS = (
-    f"Executable source lines of the {PACKAGE} package's v1 modules executed while handling requests "
-    "since this session was set up (coverage.py statement lines, Python line events, line coverage)"
+    f"Executable source lines of the {PACKAGE} package's v1 modules, the course routes excepted, "
+    "executed while handling requests since this session was set up (coverage.py statement lines, Python line events, line coverage)"
 )
 
 
@@ -60,14 +61,15 @@ def describe(error: dict) -> str:
 
 class LineMonitor:
     # records which package lines ran, and in which epoch, through sys.monitoring line events
-    # each line fires once per epoch, then is switched off until the next setup starts a new epoch
+    # mutes each line after it fires, until the next setup starts a new epoch and re-arms it
 
     def __init__(self, root: Path) -> None:
         self._prefix = str(root) + os.sep
         self._latest: dict[tuple[str, int], int] = {}
         self._epoch = 0
         self._tool: int | None = None
-        self._lock = threading.Lock()
+        # serialises epoch changes with line records, reentrant because this file's own lines fire inside it
+        self._lock = threading.RLock()
 
     def new_epoch(self) -> int:
         # starts counting again for a session opening now, turning monitoring on the first time
@@ -81,15 +83,17 @@ class LineMonitor:
     def lines_since(self, epoch: int) -> dict[str, set[int]]:
         # groups the lines that ran in this epoch or later by file
         found: dict[str, set[int]] = {}
-        for (path, line), seen in list(self._latest.items()):
+        with self._lock:
+            latest = list(self._latest.items())
+        for (path, line), seen in latest:
             if seen >= epoch:
                 found.setdefault(path, set()).add(line)
         return found
 
     def _register(self) -> int:
-        # takes the first free monitoring tool id, coverage tools may already hold one
+        # takes the first free monitoring tool id, coverage tools may already hold one, 5 is CPython's optimizer
         mon = sys.monitoring
-        for tool in (mon.COVERAGE_ID, 3, 4, 5):
+        for tool in (mon.COVERAGE_ID, 3, 4):
             try:
                 mon.use_tool_id(tool, "drifter-course-coverage")
             except ValueError:
@@ -102,32 +106,31 @@ class LineMonitor:
     def _on_line(self, code, line: int):
         # notes a package line under the current epoch, then mutes that line until the next epoch
         if code.co_filename.startswith(self._prefix):
-            self._latest[(code.co_filename, line)] = self._epoch
+            with self._lock:
+                self._latest[(code.co_filename, line)] = self._epoch
         return sys.monitoring.DISABLE
 
 
 class Statements:
-    # counts the package's executable lines the way coverage.py does, cached per file until it changes
+    # counts the package's executable lines the way coverage.py does, parsing each file once
 
     def __init__(self, root: Path) -> None:
         self._root = root
         # supplies coverage.py's default exclusions, never started, so it measures nothing itself
         self._coverage = Coverage(data_file=None, config_file=False)
-        self._cache: dict[str, tuple[float, PythonFileReporter, set[int]]] = {}
+        self._parsed: dict[str, tuple[PythonFileReporter, set[int]]] = {}
 
     def files(self) -> list[str]:
-        # lists the files that make up the /system app, leaving out v0 and bytecode caches
+        # lists the counted files of the /system app, leaving out UNCOUNTED and bytecode caches
         found = self._root.rglob("*.py")
-        return sorted(str(p) for p in found if "__pycache__" not in p.parts and p.name not in V0_MODULES)
+        return sorted(str(p) for p in found if "__pycache__" not in p.parts and p.name not in UNCOUNTED)
 
     def reporter(self, path: str) -> tuple[PythonFileReporter, set[int]]:
-        mtime = Path(path).stat().st_mtime
-        cached = self._cache.get(path)
-        if cached is None or cached[0] != mtime:
+        # parses a file once, the deployed source never changes while the process runs
+        if path not in self._parsed:
             reporter = PythonFileReporter(path, coverage=self._coverage)
-            cached = (mtime, reporter, set(reporter.lines()))
-            self._cache[path] = cached
-        return cached[1], cached[2]
+            self._parsed[path] = (reporter, set(reporter.lines()))
+        return self._parsed[path]
 
     def count(self, executed: dict[str, set[int]]) -> tuple[int, int]:
         # returns (covered, total), mapping each executed line to the statement it belongs to
@@ -143,9 +146,9 @@ class Statements:
 class Sessions:
     # holds open sessions in memory, lost on restart like run files
 
-    def __init__(self, root: Path = PACKAGE_DIR) -> None:
-        self._monitor = LineMonitor(root)
-        self._statements = Statements(root)
+    def __init__(self) -> None:
+        self._monitor = LineMonitor(PACKAGE_DIR)
+        self._statements = Statements(PACKAGE_DIR)
         self._opened: dict[str, int] = {}
         self._lock = threading.Lock()
 

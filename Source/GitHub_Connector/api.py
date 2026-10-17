@@ -1,4 +1,4 @@
-# serves the v1 API under /system, routes only wrap analyze() and the run store
+# serves the v1 API under /system: analyze and the run store, plus the course routes from course.py
 
 from __future__ import annotations
 
@@ -51,7 +51,7 @@ def _analysis_error(_, exc: AnalysisError) -> JSONResponse:
 @app.exception_handler(RequestValidationError)
 def _bad_request(request: Request, exc: RequestValidationError) -> JSONResponse:
     # answers FastAPI's own validation failures as 400, never 422, in the error shape of the route's family
-    if request.url.path.startswith("/system/test/"):
+    if request.url.path.startswith(router.prefix + course.router.prefix + "/"):
         return course.course_error(400, course.describe(exc.errors()[0]))
     err = AnalysisError(ErrorCode.INVALID_REQUEST, _describe(exc.errors()[0]))
     return _analysis_error(None, err)

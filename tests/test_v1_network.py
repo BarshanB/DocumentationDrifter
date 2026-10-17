@@ -125,6 +125,9 @@ CASES = {
     "course-setup-long-session-id": ("POST", "/test/setup", {"session_id": "x" * 201}),
     "course-setup-wrong-setup-type": ("POST", "/test/setup", {"session_id": "x", "setup": "str"}),
     "course-setup-array-body": ("POST", "/test/setup", [1]),
+    "course-setup-null-session-id": ("POST", "/test/setup", {"session_id": None}),
+    "course-setup-null-setup": ("POST", "/test/setup", {"session_id": "x", "setup": None}),
+    "course-setup-array-setup": ("POST", "/test/setup", {"session_id": "x", "setup": [1]}),
 }
 
 

@@ -183,7 +183,7 @@ Kaan chose "Apply all" on 2026-10-17, so items 1 to 3 are now in the roadmap, th
    - The M1, M2, M3, M4 and M5 edits in the table above, with the PNGs regenerated.
    - A box-to-file line in `Models/v1/README.md`.
    - Add "connector", "run store" and "delivery store" to `CONTEXT.md`.
-4. **For the team, not for me to change:** the v0 comment at `parse.py:41` (a zero `before` is no longer a first audit, decision 15), and whether `Source/LLM_Shell/` is the start of the v1.2 LLM work (ask Muhammad).
+4. **For the team, not for me to change:** the v0 comment at `parse.py:41` (a zero `before` is no longer a first audit, decision 15; done 2026-10-17, the property is now `has_before`), and whether `Source/LLM_Shell/` is the start of the v1.2 LLM work (ask Muhammad).
 
 ## Sources
 

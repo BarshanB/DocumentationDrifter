@@ -37,8 +37,10 @@ class PushEvent:
         return self.after is not None
 
     @property
-    def needs_base_snapshot(self) -> bool:
-        # reports whether a base exists, false means first audit per the schema
+    def has_before(self) -> bool:
+        # reports whether GitHub sent a previous commit, false when the push created the branch
+        # false is not a first audit: a new branch is compared with its merge base on the
+        # default branch, which the payload doesn't carry (decision 15, plan/new-branch-base.md)
         return self.before is not None
 
 

@@ -105,7 +105,7 @@ def test_commit_pair_is_recorded(client):
 def test_branch_create_has_no_base(client):
     from GitHub_Connector import store
 
-    # GitHub sends 40 zeros as before, which is the schema's first-audit case
+    # GitHub sends 40 zeros as before when a push creates the branch
     body = push_body(before="0" * 40, created=True)
     post(client, body, delivery="create")
 
@@ -146,11 +146,11 @@ def test_raw_payload_is_kept_for_replay(client):
 
 # --- parse unit -----------------------------------------------------
 
-def test_push_event_flags_first_audit():
+def test_branch_create_push_has_no_before():
     from GitHub_Connector.parse import parse
 
     event = parse(push_body(before="0" * 40, created=True), "d-1")
-    assert event.needs_base_snapshot is False
+    assert event.has_before is False
     assert event.is_analyzable is True
 
 

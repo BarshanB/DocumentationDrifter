@@ -80,4 +80,4 @@ When the default branch is first created and its head is a root commit, the Acti
 - [Connector guide](github-connector-steps.md), step 3's base table
 - [CONTEXT.md](../CONTEXT.md), "First audit"
 - [Models/v1](../Models/v1/README.md): M3 (a first audit is a root commit) and M4 (`base_commit` is null only for a root commit)
-- Still open for the team: the comment and property name in v0's `parse.py`, which use the old reading (see [actions readiness](actions-readiness.md), "Edits applied", item 4)
+- v0's `parse.py`: the property is now `has_before`, renamed from `needs_base_snapshot`, and its comment and test follow this decision (2026-10-17)

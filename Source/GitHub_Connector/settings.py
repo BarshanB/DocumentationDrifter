@@ -19,7 +19,7 @@ class AnalysisSettings(BaseSettings):
     # resolves owner/name to <base><owner>/<name>.git, tests point it at local bare repos
     remote_base_url: str = "https://github.com/"
 
-    # stores run files, wiped on Render spin-down until v3 makes it durable
+    # stores run files, wiped on redeploy and restart until v3 makes it durable
     runs_dir: Path = REPO_ROOT / "runs"
 
     # holds temporary clones, None means the system temp folder

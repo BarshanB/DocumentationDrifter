@@ -44,7 +44,7 @@ jobs:
             exit 1
           fi
 
-      # rides out a cold start, a sleeping Render service takes about a minute to answer
+      # rides out a cold start, a sleeping free-tier service can take a while to answer
       - name: Warm the service under test
         if: env.DRIFTER_TARGET_URL != ''
         run: |

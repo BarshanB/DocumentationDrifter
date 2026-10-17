@@ -1,9 +1,0 @@
-# describes the v1 service on Render's free tier, applied once Kaan approves
-services:
-  - type: web
-    name: documentation-drifter
-    runtime: docker
-    plan: free
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /system/health
-    autoDeploy: false

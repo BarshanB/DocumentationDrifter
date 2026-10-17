@@ -93,13 +93,13 @@ The connector's `tree()` and `read()` already give it what it reads from git.
 - The clone is anonymous: `GIT_TERMINAL_PROMPT=0` and an empty credential helper, so a private repo fails at once.
 - Blobless with no checkout: repo files exist only as git objects in a temporary clone, deleted after every run, error or not.
 - Each git call has a 60 s cap and the analysis a 120 s deadline; a git process that overruns is killed with its whole process group.
-- At most two analyses run at once, so two clones fit in Render's free-tier 512 MB.
+- At most two analyses run at once, so two clones fit in Railway's free 0.5 GB.
 
 ## 7. Tooling, as used
 
 - **Tests:** `pytest` with FastAPI's `TestClient` against the real app. Fixture repos are built with git under `tmp_path`, plus the labelled test repo from `tools/testrepo.py`.
 - **CI:** `.github/workflows/ci.yml` on every PR. `acceptance.yml` checks the deployed service on demand.
-- **Hosting:** a Dockerfile with git, deployed to Render's free tier (`render.yaml`) once Kaan approves.
+- **Hosting:** a Dockerfile with git, deployed to Railway's free plan (`railway.toml`, decision 8).
 - **Not added, by choice** (`Skills/CLAUDE.md`, minimal first): `pyproject.toml`, `ruff` and `mypy`.
 
 ## 8. Left out until someone decides otherwise

@@ -18,6 +18,6 @@ python -m pytest -q            # DRIFTER_OFFLINE=1 skips the GitHub tests
 
 **Settings** (environment, all optional): `DRIFTER_REMOTE_BASE_URL`, `DRIFTER_RUNS_DIR`, `DRIFTER_CLONE_DIR`, `DRIFTER_RULES_FILE`, `DRIFTER_GIT_TIMEOUT` (60 s), `DRIFTER_ANALYSIS_DEADLINE` (120 s), `DRIFTER_MAX_CONCURRENT` (2), `DRIFTER_MAX_FILE_BYTES` (1 MB).
 
-**Public URL:** not deployed yet. `render.yaml` holds the Render free-tier setup, applied once Kaan approves it.
+**Public URL:** being set up on Railway's free plan (`railway.toml`: Dockerfile build, `/system/health` health check).
 
-**Free tier, read before reporting a bug.** Call `GET /system/health` first: Render spins the service down after 15 idle minutes and it takes about a minute to wake. Run files live on local disk, which is wiped on spin-down, restart and redeploy, so a `GET` for an old run can return 404 on both teams' services. That is expected until v3 adds durable storage.
+**Free tier, read before reporting a bug.** Call `GET /system/health` first: the free service sleeps after about 5 to 10 minutes without traffic, and the first request after that can take a moment or answer 502. Run files live on local disk, which is wiped on every redeploy and restart, so a `GET` for an old run can return 404 on both teams' services. That is expected until v3 adds durable storage.

@@ -2,7 +2,7 @@
 
 **What to build:** A maintainer starts a manual workflow that warms the deployed service through GET /system/health, then runs T-01 to T-07 on the test repo and the conformance test against the deployed URL, so the public service is checked the way the course tester will check it. It is the dry run for the v3 Action.
 
-**Blocked by:** 10 (Public deployment on Render's free tier); 12 (Full conformance set against the reference service)
+**Blocked by:** 10 (Public deployment on Railway's free plan); 12 (Full conformance set against the reference service)
 
 **Status:** workflow written; the passing run needs the push, the deploy (10) and the public test repo (11). It takes target_url as an input, or the DRIFTER_TARGET_URL repository variable, and reads the test repo from the DRIFTER_TEST_REPO variable. The target path (DRIFTER_TARGET_URL) was dry-run on 2026-10-17 against a locally served copy.
 

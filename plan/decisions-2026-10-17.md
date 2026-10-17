@@ -81,6 +81,10 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 **Answer:** Yes, on the `kaan_v1` branch, with no merge until Kaan says so.
 **Why:** Teammates can then work from the same plan and decisions on GitHub.
 
+## Later the same day
+
+**Hosting (roadmap decision 8).** Render's free tier needs a card on file, and the card wouldn't verify, so Kaan moved hosting to Railway, whose Free plan needs no card. Where Q7, Q11 and Q18 above mention Render, read Railway: the Gemini key goes in a Railway environment variable, and two clones fit in its 0.5 GB.
+
 ## Still open
 
 - **Lockfiles (roadmap decision 17):** how they are classified depends on what the reference service does.

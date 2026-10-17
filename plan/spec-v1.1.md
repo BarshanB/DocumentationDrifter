@@ -51,7 +51,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 37. As the course tester, I want `issues[]` present and empty in v1.1, so that the shape is right before v1.2 fills it.
 38. As a maintainer, I want a failed analysis to return an `ErrorBody` with 400, 404 or 500 and save no run file, so that a failure never looks like a SUCCESS run.
 39. As a maintainer, I want each git call capped at 60 s and the whole analysis at 120 s, both returning 500 `TIMEOUT`, so that a slow repo can't hang the service.
-40. As a maintainer, I want at most two analyses to run at once, with extra requests waiting, so that two blobless clones fit in Render's free-tier 512 MB.
+40. As a maintainer, I want at most two analyses to run at once, with extra requests waiting, so that two blobless clones fit in the 0.5 GB of Railway's free plan.
 41. As a maintainer, I want the deadline, git timeout and concurrency limit in config, so that I can tune them without changing code.
 42. As a maintainer, I want a failure to write the run file to return 500 `WRITE_FAILED`, so that a lost run is never reported as saved.
 43. As the analysed repo's owner, I want the service never to install, import or run my code, and never to write my files to disk except as git objects in a temporary clone, so that analysing my repo is safe.
@@ -67,7 +67,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 53. As a maintainer, I want CI to run the test suite on every PR, so that a red change can't merge unnoticed.
 54. As a maintainer, I want a manual acceptance workflow that warms the deployed service and runs T-01 to T-07 and the conformance test against it, so that the deployed URL is checked the same way the tester will check it.
 55. As the course tester, I want the service deployed at a public URL, so that I can reach it.
-56. As an operator, I want the README to say that the free tier spins down after 15 idle minutes and wipes saved runs, so that a 404 on an old run isn't mistaken for a bug.
+56. As an operator, I want the README to say that the free service sleeps when idle and loses saved runs on redeploy and restart, so that a 404 on an old run isn't mistaken for a bug.
 57. As the course tester, I want `POST /system/test/setup` and `GET /system/test/report` with the reference service's shapes, and an unknown session to return 404 `{"message", "source":"system"}`, so that the course endpoints are graded the same on both services.
 58. As a teammate, I want a public test repo with labelled cases, so that the acceptance criteria and v2's reliability run have shared fixtures.
 
@@ -87,7 +87,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 - **Categories.** The first matching rule wins: `requirements*.txt` → OTHER; `docs/**`, `*.md`, `*.rst`, `*.txt` → DOCUMENTATION; `src/**`, `tests/**`, `*.py` → IMPLEMENTATION; everything else → OTHER. There are no DESIGN, ARCHITECTURE, SPECIFICATION or REQUIREMENT rules yet. Lockfiles are classified by path until the reference service says otherwise. `config_version` is a short hash of the rules file.
 - **Run store.** It has `save(analysis_id, data)`, `load(analysis_id)` and `dump(result)`, the only serializer. Runs are written once to `runs/{analysis_id}.json` on local disk, and `runs/` is gitignored. `changes[]` and `skipped[]` are sorted by path before saving. Nothing is saved for a failed analysis.
 - **Limits.** Each git call times out after 60 s and the whole analysis after 120 s, both returning `TIMEOUT`. At most two analyses run at once, using a semaphore around `analyze()`. All three values are config.
-- **Hosting.** A Docker image with git installed runs uvicorn with `Source/` as the app directory. It is deployed to the Render free tier, and `GET /system/health` is the warm-up call.
+- **Hosting.** A Docker image with git installed runs uvicorn with `Source/` as the app directory. It is deployed to Railway's free plan (decision 8, 2026-10-17), and `GET /system/health` is the warm-up call and health check.
 - **CI.** A PR workflow runs `python -m pytest -q` with read-only permissions, network and conformance tests included (Kaan, 2026-10-17). It warms the reference service through its health endpoint first. A manual acceptance workflow warms the deployed service with retries, then runs T-01 to T-07 and the conformance test against it.
 - **Course endpoints.** `POST /system/test/setup` and `GET /system/test/report` come last and match the reference service's shapes. Their exact semantics are to be confirmed with the pod before work starts.
 

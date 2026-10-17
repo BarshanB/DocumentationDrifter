@@ -23,6 +23,6 @@ ENV DRIFTER_TOOL_VERSION=${TOOL_VERSION} \
     DRIFTER_RUNS_DIR=/app/runs \
     PYTHONUNBUFFERED=1
 
-# listens on Render's PORT, 8000 when run locally
+# listens on the PORT the host sets (Railway does), 8000 when run locally
 EXPOSE 8000
 CMD ["sh", "-c", "exec uvicorn --app-dir Source GitHub_Connector.api:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -4,7 +4,7 @@ Items from the 2026-10-17 review of v1.1, left for later. Open questions for the
 
 ## Waiting for Kaan's decision
 
-- **`tool_version` names the build** (review finding b). Every run reports `1.1.0`, so runs from different deploys can't be told apart (spec user story 6). Render sets `RENDER_GIT_COMMIT` at build time and at runtime. Proposed fix: when it is set, report `1.1.0+<first 7 characters>`, and keep `1.1.0` locally. A test sets the variable and checks the result.
+- **`tool_version` names the build** (review finding b). Every run reports `1.1.0`, so runs from different deploys can't be told apart (spec user story 6). Railway sets `RAILWAY_GIT_COMMIT_SHA` for deploys triggered from GitHub. Proposed fix: when it is set, report `1.1.0+<first 7 characters>`, and keep `1.1.0` locally. A test sets the variable and checks the result.
 
 ## Skipped for now
 

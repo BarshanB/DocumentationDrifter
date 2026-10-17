@@ -174,3 +174,23 @@ def test_analyze_works_without_http(api, make_repo):
 def test_only_the_contract_routes_are_served(api):
     for path in ("/system/docs", "/docs", "/redoc", "/system/redoc"):
         assert api.get(path).status_code == 404, path
+
+
+def test_the_prefix_itself_lists_the_routes(api, v1_env):
+    # answers plain /system with the route list, a route the reference service doesn't have
+    r = api.get("/system")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["service"] == "DocumentationDrifter"
+    assert body["routes"] == [
+        "GET /system/health",
+        "POST /system/analyze",
+        "GET /system/analysis/{analysis_id}",
+        "POST /system/test/setup",
+        "GET /system/test/report?session_id=...",
+    ]
+
+
+def test_the_route_list_stays_out_of_the_openapi_document(api, v1_env):
+    # keeps the schema comparison with the reference service unaffected
+    assert "/system" not in api.get("/system/openapi.json").json()["paths"]

@@ -97,6 +97,8 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 
 Also seen, and already allowed: `docs/overrides/partials/nav.html` is DOCUMENTATION here and OTHER there. No public commit switching a symlink to a file was found, so that probe waits for the test repo (ticket 11).
 
+**Route list at `/system` (Kaan, later the same day).** Plain `/system` answers with a JSON list of the routes, so a person opening the base URL sees what's there instead of 404. The reference service has no such route. It is left out of the OpenAPI document and out of the conformance set, so the schema comparison is unaffected.
+
 ## Still open
 
 - **Skipped files, skip reasons and hidden paths:** match the reference service on the three differences above, record them as known differences, or ask the pod which one is meant (Kaan to decide; probed 2026-10-17). Lockfiles (roadmap decision 17) follow whatever is chosen for skip reasons.

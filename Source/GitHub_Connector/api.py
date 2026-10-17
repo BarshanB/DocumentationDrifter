@@ -86,6 +86,21 @@ def get_analysis(analysis_id: str) -> Response:
     return _json(data)
 
 
+@router.get("", include_in_schema=False)
+def index() -> dict:
+    # lists the routes for a person who opens plain /system, kept out of the OpenAPI document
+    return {
+        "service": "DocumentationDrifter",
+        "routes": [
+            "GET /system/health",
+            "POST /system/analyze",
+            "GET /system/analysis/{analysis_id}",
+            "POST /system/test/setup",
+            "GET /system/test/report?session_id=...",
+        ],
+    }
+
+
 @router.get("/health")
 def health() -> dict[str, str]:
     # answers the warm-up call, does no git work

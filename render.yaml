@@ -1,4 +1,4 @@
-# Render blueprint for the v1 service on the free tier; applied only once Kaan approves the setup
+# describes the v1 service on Render's free tier, applied once Kaan approves
 services:
   - type: web
     name: documentation-drifter

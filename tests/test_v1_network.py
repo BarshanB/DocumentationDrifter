@@ -150,7 +150,7 @@ def analyze(body):
 
 HELLO_FULL = "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d"
 
-# the conformance request set: real repos, then every error case (ticket 12)
+# lists the conformance requests, real repos then every error case (ticket 12)
 CASES = {
     "hello-world": analyze(HELLO),
     "hello-world-explicit-parent": analyze({**HELLO, "base_commit": "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e"}),
@@ -201,7 +201,7 @@ def test_conformance(case, target, github_env, live_reference, request):
     found = reference.differences(reference.normalise(ours.json()), reference.normalise(their.json()))
     assert found == [], f"{case}:\n" + "\n".join(found)
     if method == "POST" and ours.status_code == 200:
-        # each service serves back its own POST bytes
+        # checks each service serves back its own POST bytes
         assert target.get(f"/system/analysis/{ours.json()['analysis_id']}").content == ours.content
         assert theirs("GET", f"/analysis/{their.json()['analysis_id']}").content == their.content
 

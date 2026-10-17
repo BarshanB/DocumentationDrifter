@@ -18,13 +18,13 @@ CAPTURED_OPENAPI = Path(__file__).parent / "data" / "reference-openapi.json"
 SHARED_MODELS = ["AnalysisRequest", "AnalysisResult", "Change", "Finding", "Skipped", "ErrorBody"]
 
 # lists the only differences allowed between the services, in one place (ticket 09)
-# fields removed before comparing, because they differ on every run or name the build
+# removes these fields before comparing, they differ every run or name the build
 VOLATILE_FIELDS = ("analysis_id", "created_at", "tool_version")
-# fields whose values may differ: our rules file is not theirs
+# allows these fields to differ, our rules file is not theirs
 KNOWN_DIFFERENT_FIELDS = ("config_version",)
-# category values ours may give where theirs gives another: they have no DOCUMENTATION yet
+# allows these category swaps, they have no DOCUMENTATION yet
 KNOWN_CATEGORY_SWAPS = {("DOCUMENTATION", "OTHER")}
-# enum values only our schema has
+# allows enum values only our schema has
 KNOWN_SCHEMA_EXTRAS = {"DOCUMENTATION"}
 
 
@@ -149,7 +149,7 @@ def capture() -> None:
 
 
 if __name__ == "__main__":
-    # run as: python tests/reference.py capture
+    # runs the capture, as python tests/reference.py capture
     if sys.argv[1:] == ["capture"]:
         capture()
     else:

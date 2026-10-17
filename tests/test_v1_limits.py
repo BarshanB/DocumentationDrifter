@@ -81,7 +81,7 @@ def test_extra_requests_wait_for_a_slot_and_waiting_is_not_counted(api, head, v1
     with slot():
         worker = threading.Thread(target=lambda: results.append(analyse(api, head)))
         worker.start()
-        time.sleep(2.5)  # longer than the deadline, yet the queued request must still succeed
+        time.sleep(2.5)  # waits past the deadline, the queued request must still succeed
         assert results == [], "the request ran without a free slot"
     worker.join(timeout=30)
     assert results[0].status_code == 200, results[0].text

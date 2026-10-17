@@ -1,9 +1,4 @@
-# builds the public test repo deterministically: same commits, same SHAs, on any machine
-#
-#   python tools/testrepo.py <folder>   writes a bare repo there, ready to push once approved
-#
-# Every label is one analysis request with its expected answer, written by hand below so the
-# tests check our service against intent rather than against its own output.
+# builds the public test repo deterministically, same SHAs on any machine: python tools/testrepo.py <folder>
 
 from __future__ import annotations
 
@@ -14,15 +9,14 @@ import sys
 from pathlib import Path
 
 AUTHOR = "DocumentationDrifter Fixtures <fixtures@documentation-drifter.invalid>"
-EPOCH = 1767225600  # 2026-01-01T00:00:00Z, each commit one minute later
+EPOCH = 1767225600  # starts at 2026-01-01T00:00:00Z, one minute per commit
 MB = 1024 * 1024
 
 TEXT = "".join(f"Line {i}: documentation drifter fixture text, kept long enough to rename well.\n" for i in range(30))
 PNG = b"\x89PNG\r\n\x1a\n" + bytes(range(256)) * 4
 LATIN1 = "Caf\xe9 cr\xe8me, not UTF-8\n".encode("latin-1")
 
-# changes each step makes: path -> bytes (regular), ("x", bytes) executable, ("link", target),
-# ("gitlink", sha) submodule entry, or None to delete
+# lists each step's files, as bytes, ("x", bytes), ("link", target), ("gitlink", sha) or None to delete
 STEPS: list[tuple[str, dict]] = [
     ("root", {
         "README.md": "# Fixture repo\n",
@@ -90,8 +84,7 @@ def skip(path, reason):
 
 BINARY, TOO_LARGE, NOT_UTF8 = "binary file", "file larger than 1 MB", "not valid UTF-8"
 
-# label -> (head step, base step or None for "omit base_commit", expected changes, expected skipped)
-# a base of "parent" means the expected base_commit is the head's first parent
+# maps each label to (head, base or None, changes, skipped), written by hand to check intent
 EXPECTED = {
     "root": ("root", None, [
         change("Makefile", "ADDED", "OTHER"),
@@ -118,7 +111,7 @@ EXPECTED = {
         change("switchy.txt", "ADDED", "DOCUMENTATION"),
     ], []),
     "file-to-symlink": ("file-to-symlink", None, [], []),
-    # M3's default until the reference service is probed (ticket 12)
+    # follows M3 until ticket 12 probes the reference service
     "symlink-to-file": ("symlink-to-file", None, [change("switchy.txt", "TYPE_CHANGED", "DOCUMENTATION")], []),
     "submodule": ("submodule", None, [change("vendor/README.md", "ADDED", "DOCUMENTATION")], []),
     "binary": ("binary", None, [], [skip("assets/logo.png", BINARY)]),
@@ -153,8 +146,7 @@ EXPECTED = {
     ], []),
 }
 
-# tester cases each label stands for; T-01, T-02, T-06 and T-07 are inferred from the roadmap
-# and must be checked against M0's definitions before the manifest is final
+# names the tester cases each label stands for, "?" where M0 doesn't pin the case down
 COVERS = {
     "modified": ["T-01?", "AC-01"],
     "added-and-deleted": ["T-02?", "AC-01"],

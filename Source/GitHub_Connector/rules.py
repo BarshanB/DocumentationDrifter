@@ -45,9 +45,9 @@ def classify(path: str) -> Category:
 def matches(pattern: str, path: str) -> bool:
     # matches one rule against a repo-relative path, gitignore style
     if "/" not in pattern:
-        # a bare name pattern such as *.md matches the file name in any folder
+        # matches a bare name pattern such as *.md against the file name, in any folder
         return fnmatchcase(path.rsplit("/", 1)[-1], pattern)
     if pattern.endswith("/**"):
-        # a folder pattern such as docs/** matches everything under that folder at the root
+        # matches a folder pattern such as docs/** against everything under it, from the root
         return path.startswith(pattern[:-2])
     return fnmatchcase(path, pattern)

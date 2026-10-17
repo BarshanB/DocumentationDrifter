@@ -77,7 +77,7 @@ def test_every_change_of_a_huge_commit_is_returned_sorted(api, make_repo):
 
 
 def test_tester_change_types(api, make_repo):
-    # added, modified and deleted in one commit, each listed once
+    # lists added, modified and deleted files once each
     repo = make_repo()
     repo.commit({"keep.txt": "k\n", "edit.txt": "1\n", "gone.txt": "g\n"})
     head = repo.commit({"edit.txt": "2\n", "gone.txt": None, "new.txt": "n\n"})
@@ -143,6 +143,6 @@ def test_switch_between_file_and_symlink_never_lists_the_link_side(api, make_rep
     repo.commit({"target.txt": "t\n", "flip.txt": "regular\n"})
     to_link = repo.commit({}, symlinks={"flip.txt": "target.txt"})
     back = repo.commit({"flip.txt": "regular again\n"})
-    # the regular-to-link side lists nothing; the link-to-regular side lists only the regular file
+    # lists nothing for file-to-link, only the regular file for link-to-file
     assert listing(analyse(api, to_link)) == []
     assert [c["path"] for c in analyse(api, back)["changes"]] == ["flip.txt"]

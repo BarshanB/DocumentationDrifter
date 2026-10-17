@@ -41,7 +41,7 @@ class FileChange:
     path: str
     change_type: ChangeType
     old_path: str | None = None
-    blob: str = ""  # the blob checked: head side, or base side for a deletion
+    blob: str = ""  # holds the blob checked, base side for a deletion
 
 
 @dataclass(frozen=True)
@@ -193,8 +193,7 @@ def _rmtree(path: Path) -> None:
 def fetch(
     repo: str, head: str, base: str | None = None, deadline: float | None = None
 ) -> Iterator[Comparison]:
-    # clones repo blobless into a temp folder, yields the comparison, deletes the clone on exit
-    # deadline is a time.monotonic() value after which any git call fails with TIMEOUT
+    # clones repo blobless and yields the comparison, git calls past deadline (monotonic) fail with TIMEOUT
     clone_root = get_settings().clone_dir
     if clone_root is not None:
         clone_root.mkdir(parents=True, exist_ok=True)

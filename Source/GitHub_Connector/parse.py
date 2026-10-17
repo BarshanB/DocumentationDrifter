@@ -38,9 +38,7 @@ class PushEvent:
 
     @property
     def has_before(self) -> bool:
-        # reports whether GitHub sent a previous commit, false when the push created the branch
-        # false is not a first audit: a new branch is compared with its merge base on the
-        # default branch, which the payload doesn't carry (decision 15, plan/new-branch-base.md)
+        # reports whether GitHub sent a previous commit, false on a new branch, which uses its merge base (decision 15)
         return self.before is not None
 
 

@@ -132,11 +132,31 @@ def _clone(git: _Git, repo: str) -> None:
 
 
 def _resolve(git: _Git, sha: str) -> str:
-    # expands a SHA that is already in the clone to its full 40-hex form
+    # expands a SHA to its full 40-hex form, fetching a full SHA by id when no branch reaches it
+    sha = sha.lower()
+    full = len(sha) == 40
+    if full and not _present(git, sha):
+        # asks for the commit by id, GitHub serves any commit in the repo this way
+        git.run("fetch", "--quiet", "--no-tags", "--filter=blob:none", "origin", sha, check=False)
     proc = git.run("rev-parse", "--verify", "--quiet", "--end-of-options", f"{sha}^{{commit}}", check=False)
     if proc.returncode != 0:
-        raise AnalysisError(ErrorCode.COMMIT_NOT_FOUND, f"Commit {sha} not found")
+        if full:
+            raise AnalysisError(ErrorCode.COMMIT_NOT_FOUND, f"Commit {sha} not found")
+        raise AnalysisError(
+            ErrorCode.COMMIT_NOT_FOUND,
+            f"Commit {sha} not found or ambiguous; a short SHA only works for a commit on a "
+            "branch or tag, so send the full 40-character SHA",
+        )
     return proc.stdout.decode().strip()
+
+
+def _present(git: _Git, sha: str) -> bool:
+    # checks the clone for an object without a lazy fetch (git 2.44+ honours the flag)
+    git.env["GIT_NO_LAZY_FETCH"] = "1"
+    try:
+        return git.ok("cat-file", "-e", sha)
+    finally:
+        del git.env["GIT_NO_LAZY_FETCH"]
 
 
 def _first_parent(git: _Git, head: str) -> str | None:
@@ -147,7 +167,9 @@ def _first_parent(git: _Git, head: str) -> str | None:
 
 def _diff(git: _Git, base: str | None, head: str) -> list[FileChange]:
     # lists changed paths between base and head, renames only, never copies
-    raw = git.run("diff", "--name-status", "-z", "-M", "--no-ext-diff", base, head).stdout
+    # compares a first audit against the empty tree, so every file counts as added
+    old = base if base is not None else git.out("hash-object", "-t", "tree", "--stdin")
+    raw = git.run("diff", "--name-status", "-z", "-M", "--no-ext-diff", old, head).stdout
     fields = raw.decode("utf-8", "surrogateescape").split("\0")
     changes: list[FileChange] = []
     i = 0

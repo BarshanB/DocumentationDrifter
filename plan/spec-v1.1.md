@@ -88,7 +88,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 - **Run store.** It has `save(analysis_id, data)`, `load(analysis_id)` and `dump(result)`, the only serializer. Runs are written once to `runs/{analysis_id}.json` on local disk, and `runs/` is gitignored. `changes[]` and `skipped[]` are sorted by path before saving. Nothing is saved for a failed analysis.
 - **Limits.** Each git call times out after 60 s and the whole analysis after 120 s, both returning `TIMEOUT`. At most two analyses run at once, using a semaphore around `analyze()`. All three values are config.
 - **Hosting.** A Docker image with git installed runs uvicorn with `Source/` as the app directory. It is deployed to the Render free tier, and `GET /system/health` is the warm-up call.
-- **CI.** A PR workflow runs `python -m pytest -q` with read-only permissions. A manual acceptance workflow warms the deployed service with retries, then runs T-01 to T-07 and the conformance test against it.
+- **CI.** A PR workflow runs `python -m pytest -q` with read-only permissions, network and conformance tests included (Kaan, 2026-10-17). It warms the reference service through its health endpoint first. A manual acceptance workflow warms the deployed service with retries, then runs T-01 to T-07 and the conformance test against it.
 - **Course endpoints.** `POST /system/test/setup` and `GET /system/test/report` come last and match the reference service's shapes. Their exact semantics are to be confirmed with the pod before work starts.
 
 ## Testing Decisions

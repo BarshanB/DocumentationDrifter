@@ -8,7 +8,7 @@
 
 **Spec:** plan/spec-v1.1.md, user stories 2, 14, 49, 50, 51
 
-- [ ] All network tests share one skip marker. A quick reachability check skips them when GitHub can't be reached, and they also skip when the suite is told to stay offline (the switch the PR workflow sets). The local suite always runs.
+- [ ] All network tests share one skip marker. A quick reachability check skips them when GitHub can't be reached, and they also skip when the suite is told to stay offline (for local runs; the PR workflow leaves it off and runs them). The local suite always runs.
 - [ ] octocat/Hello-World at 7fd1a60, through the default remote base URL, returns head_commit 7fd1a60b… and base_commit 553c2077…, its first parent, with the README change as MODIFIED. The run file is saved and can be fetched.
 - [ ] A repository that can't exist on GitHub gives 404 REPOSITORY_NOT_FOUND within a few seconds and with no prompt, and so does a private repository the team owns. A credential helper is set up for the test process to record any use, and it is never called. If the test host injects credentials outside git's control, record that, and also run the private-repo check somewhere nothing is injected (CI or the deployed service).
 - [ ] A captured copy of the reference service's OpenAPI document is kept as test data. An offline test compares it with our AnalysisRequest, AnalysisResult, Change, Finding, Skipped and ErrorBody. The only allowed difference is DOCUMENTATION in the category enum; Finding has no confidence field, and LLM_UNAVAILABLE is not yet an error code. A network test runs the same comparison against the live document.

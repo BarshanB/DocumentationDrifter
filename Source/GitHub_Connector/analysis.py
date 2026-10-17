@@ -14,6 +14,7 @@ from GitHub_Connector.schemas import (
     AnalysisResult,
     Change,
     ErrorCode,
+    Skipped,
     Status,
 )
 from GitHub_Connector.settings import get_settings
@@ -49,6 +50,7 @@ def analyze(request: AnalysisRequest) -> AnalysisResult:
             )
             for c in cmp.changes
         ]
+        skipped = [Skipped(path=s.path, reason=s.reason) for s in cmp.skipped]
         head, base = cmp.head, cmp.base
 
     result = AnalysisResult(
@@ -62,7 +64,7 @@ def analyze(request: AnalysisRequest) -> AnalysisResult:
         error=None,
         issues=[],
         changes=sorted(changes, key=lambda c: c.path),
-        skipped=[],
+        skipped=sorted(skipped, key=lambda s: s.path),
         created_at=_now(),
     )
     runs.save(result.analysis_id, runs.dump(result))

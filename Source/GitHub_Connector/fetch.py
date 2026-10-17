@@ -28,6 +28,11 @@ _STATUS = {
 # keeps plain and executable files, drops symlinks (120000) and submodules (160000)
 REGULAR = {"100644", "100755"}
 
+# words each skip reason as a short fixed string
+SKIP_BINARY = "binary file"
+SKIP_TOO_LARGE = "file larger than 1 MB"
+SKIP_NOT_UTF8 = "not valid UTF-8"
+
 
 @dataclass(frozen=True)
 class FileChange:
@@ -35,6 +40,14 @@ class FileChange:
     path: str
     change_type: ChangeType
     old_path: str | None = None
+    blob: str = ""  # the blob checked: head side, or base side for a deletion
+
+
+@dataclass(frozen=True)
+class SkippedFile:
+    # names a changed path that could not be checked, with a short fixed reason
+    path: str
+    reason: str
 
 
 @dataclass
@@ -44,7 +57,16 @@ class Comparison:
     head: str
     base: str | None
     changes: list[FileChange] = field(default_factory=list)
+    skipped: list[SkippedFile] = field(default_factory=list)
     _git: _Git | None = None
+
+    def read(self, path: str, side: str) -> bytes | None:
+        # returns a file's bytes at "base" or "head" from git objects, None where it is missing
+        sha = self.head if side == "head" else self.base
+        if sha is None:
+            return None
+        proc = self._git.run("cat-file", "blob", f"{sha}:{path}", check=False)
+        return proc.stdout if proc.returncode == 0 else None
 
     def tree(self, side: str) -> list[str]:
         # lists the kept files at "base" or "head", without -l so no blob is fetched
@@ -74,14 +96,16 @@ class _Git:
             "LC_ALL": "C",
         }
 
-    def run(self, *args: str, cwd: Path | None = None, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+    def run(
+        self, *args: str, cwd: Path | None = None, check: bool = True, input: bytes | None = None
+    ) -> subprocess.CompletedProcess[bytes]:
         # runs one git command with no credential helper, returns raw bytes
         cmd = ["git", "-c", "credential.helper=", "-c", "core.quotepath=false", *args]
         proc = subprocess.run(
             cmd,
             cwd=cwd or self.workdir / "clone",
             env=self.env,
-            stdin=subprocess.DEVNULL,
+            input=input if input is not None else b"",
             capture_output=True,
         )
         if check and proc.returncode != 0:
@@ -128,7 +152,9 @@ def fetch(repo: str, head: str, base: str | None = None) -> Iterator[Comparison]
         head_sha = _resolve(git, head)
         base_sha = _resolve(git, base) if base is not None else _first_parent(git, head_sha)
         cmp = Comparison(repo=repo, head=head_sha, base=base_sha, _git=git)
-        cmp.changes = _diff(git, base_sha, head_sha)
+        # compares a first audit against the empty tree, so every file counts as added
+        old = base_sha if base_sha is not None else git.out("hash-object", "-t", "tree", "--stdin")
+        cmp.changes, cmp.skipped = _sort_out(git, old, head_sha, _diff(git, old, head_sha))
         yield cmp
     finally:
         _rmtree(workdir)
@@ -187,17 +213,15 @@ def kept(path: str, mode: str) -> bool:
     return mode in REGULAR and not any(part.startswith(".") for part in path.split("/"))
 
 
-def _diff(git: _Git, base: str | None, head: str) -> list[FileChange]:
-    # lists changed paths between base and head, renames only, never copies
-    # compares a first audit against the empty tree, so every file counts as added
-    old = base if base is not None else git.out("hash-object", "-t", "tree", "--stdin")
+def _diff(git: _Git, old: str, head: str) -> list[FileChange]:
+    # lists changed paths between old and head, renames only, never copies
     raw = git.run("diff", "--raw", "-z", "-M", "--no-abbrev", "--no-ext-diff", old, head).stdout
     fields = raw.decode("utf-8", "surrogateescape").split("\0")
     changes: list[FileChange] = []
     i = 0
     while i < len(fields) and fields[i]:
         # reads ":oldmode newmode oldsha newsha status" then one or two paths
-        old_mode, new_mode, _, _, status = fields[i][1:].split(" ")
+        old_mode, new_mode, old_blob, new_blob, status = fields[i][1:].split(" ")
         letter = status[0]
         if letter == "R":
             old_path, new_path = fields[i + 1], fields[i + 2]
@@ -205,15 +229,93 @@ def _diff(git: _Git, base: str | None, head: str) -> list[FileChange]:
             # checks each side on its own, so an ignored path never shows, not even as old_path
             old_ok, new_ok = kept(old_path, old_mode), kept(new_path, new_mode)
             if old_ok and new_ok:
-                changes.append(FileChange(new_path, ChangeType.RENAMED, old_path))
+                changes.append(FileChange(new_path, ChangeType.RENAMED, old_path, new_blob))
             elif new_ok:
-                changes.append(FileChange(new_path, ChangeType.ADDED))
+                changes.append(FileChange(new_path, ChangeType.ADDED, blob=new_blob))
             elif old_ok:
-                changes.append(FileChange(old_path, ChangeType.DELETED))
+                changes.append(FileChange(old_path, ChangeType.DELETED, blob=old_blob))
             continue
         path = fields[i + 1]
         i += 2
         # judges the head side, or the base side for a deletion
-        if kept(path, old_mode if letter == "D" else new_mode):
-            changes.append(FileChange(path, _STATUS[letter]))
+        if letter == "D":
+            if kept(path, old_mode):
+                changes.append(FileChange(path, ChangeType.DELETED, blob=old_blob))
+        elif kept(path, new_mode):
+            changes.append(FileChange(path, _STATUS[letter], blob=new_blob))
     return changes
+
+
+def _sort_out(
+    git: _Git, old: str, head: str, changes: list[FileChange]
+) -> tuple[list[FileChange], list[SkippedFile]]:
+    # moves changes that can't be read as text into skipped files, each with a reason
+    if not changes:
+        return [], []
+    binary = _numstat_binaries(git, old, head)
+    sizes = _sizes(git, [c.blob for c in changes])
+    cap = get_settings().max_file_bytes
+    reasons: dict[str, str] = {}
+    to_read: list[FileChange] = []
+    for c in changes:
+        if c.path in binary:
+            reasons[c.path] = SKIP_BINARY
+        elif sizes[c.blob] > cap:
+            reasons[c.path] = SKIP_TOO_LARGE
+        else:
+            to_read.append(c)
+    for c, data in zip(to_read, _contents(git, [c.blob for c in to_read])):
+        if b"\0" in data[:8000]:
+            reasons[c.path] = SKIP_BINARY
+        else:
+            try:
+                data.decode("utf-8")
+            except UnicodeDecodeError:
+                reasons[c.path] = SKIP_NOT_UTF8
+    kept_changes = [c for c in changes if c.path not in reasons]
+    skipped = [SkippedFile(path, reason) for path, reason in reasons.items()]
+    return kept_changes, skipped
+
+
+def _numstat_binaries(git: _Git, old: str, head: str) -> set[str]:
+    # asks git which changed paths are binary, which also fetches their blobs in one batch
+    raw = git.run("diff", "--numstat", "-z", "-M", "--no-ext-diff", old, head).stdout
+    fields = raw.decode("utf-8", "surrogateescape").split("\0")
+    binary: set[str] = set()
+    i = 0
+    while i < len(fields) and fields[i]:
+        added, deleted, path = fields[i].split("\t", 2)
+        if path == "":
+            # names a rename, the old and new paths follow as their own fields
+            path = fields[i + 2]
+            i += 3
+        else:
+            i += 1
+        if added == "-" and deleted == "-":
+            binary.add(path)
+    return binary
+
+
+def _sizes(git: _Git, blobs: list[str]) -> dict[str, int]:
+    # reads blob sizes in one call, without reading their contents
+    out = git.run("cat-file", "--batch-check", input="".join(b + "\n" for b in blobs).encode()).stdout
+    sizes = {}
+    for line in out.decode().splitlines():
+        oid, _, size = line.split(" ")
+        sizes[oid] = int(size)
+    return sizes
+
+
+def _contents(git: _Git, blobs: list[str]) -> list[bytes]:
+    # reads several blobs in one call, in the order asked
+    if not blobs:
+        return []
+    out = git.run("cat-file", "--batch", input="".join(b + "\n" for b in blobs).encode()).stdout
+    contents, pos = [], 0
+    for _ in blobs:
+        header_end = out.index(b"\n", pos)
+        size = int(out[pos:header_end].split(b" ")[2])
+        start = header_end + 1
+        contents.append(out[start:start + size])
+        pos = start + size + 1
+    return contents

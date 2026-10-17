@@ -28,6 +28,9 @@ class AnalysisSettings(BaseSettings):
     # lists the ordered path rules, config_version is a hash of this file
     rules_file: Path = PACKAGE_DIR / "path_rules.json"
 
+    # skips any changed file over this many bytes
+    max_file_bytes: int = 1024 * 1024
+
     # names the build in every run file
     tool_version: str = "1.1.0"
 

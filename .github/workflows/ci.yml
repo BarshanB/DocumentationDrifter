@@ -44,6 +44,7 @@ jobs:
           DRIFTER_REQUIRE_ANONYMOUS: "1"
         # turns each failing test into an annotation, readable without opening the log
         run: |
-          python -m pytest -q -rfE 2>&1 | tee pytest.log || status=$?
+          python -m pytest -q -rfE > pytest.log 2>&1 || status=$?
+          cat pytest.log
           grep -E '^(FAILED|ERROR) ' pytest.log | while read -r line; do echo "::error title=pytest::$line"; done || true
           exit ${status:-0}

@@ -69,7 +69,8 @@ def test_schema_comparison_catches_a_real_difference():
 @pytest.mark.network
 def test_our_schema_matches_the_live_reference(live_reference):
     theirs = httpx.get(f"{live_reference}/openapi.json", timeout=60).json()
-    assert reference.schema_differences(our_openapi(), theirs) == []
+    found = reference.schema_differences(our_openapi(), theirs)
+    assert found == [], " | ".join(found)
 
 
 # --- conformance -----------------------------------------------------
@@ -134,7 +135,7 @@ def test_conformance(case, target, github_env, live_reference, request):
     their = theirs(method, path, body)
     assert ours.status_code == their.status_code, f"{case}: status ours {ours.status_code}, theirs {their.status_code}"
     found = reference.differences(reference.normalise(ours.json()), reference.normalise(their.json()))
-    assert found == [], f"{case}:\n" + "\n".join(found)
+    assert found == [], f"{case}: " + " | ".join(found)
     if method == "POST" and ours.status_code == 200:
         # checks each service serves back its own POST bytes
         assert target.get(f"/system/analysis/{ours.json()['analysis_id']}").content == ours.content

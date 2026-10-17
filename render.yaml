@@ -1,0 +1,9 @@
+# Render blueprint for the v1 service on the free tier; applied only once Kaan approves the setup
+services:
+  - type: web
+    name: documentation-drifter
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /system/health
+    autoDeploy: false

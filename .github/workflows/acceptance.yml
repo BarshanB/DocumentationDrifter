@@ -1,0 +1,66 @@
+# checks the deployed service the way the course tester will: warm it, run T-01 to T-07 and conformance
+
+name: Acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Service to check, ending in /system (empty runs the in-process app)"
+        required: false
+        default: ""
+  # schedule:
+  #   - cron: "17 6 * * 1"   # optional weekly run, off until Kaan turns it on
+
+permissions:
+  contents: read
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DRIFTER_TARGET_URL: ${{ inputs.target_url || vars.DRIFTER_TARGET_URL }}
+      DRIFTER_TEST_REPO: ${{ vars.DRIFTER_TEST_REPO }}
+      DRIFTER_REQUIRE_REFERENCE: "1"
+      DRIFTER_REQUIRE_ANONYMOUS: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned requirements
+        run: pip install -r requirements.txt
+
+      - name: Check the test repo is configured
+        run: |
+          if [ -z "$DRIFTER_TEST_REPO" ]; then
+            echo "::error::set the repository variable DRIFTER_TEST_REPO to the public test repo (owner/name)"
+            exit 1
+          fi
+
+      # rides out a cold start, a sleeping Render service takes about a minute to answer
+      - name: Warm the service under test
+        if: env.DRIFTER_TARGET_URL != ''
+        run: |
+          for i in $(seq 1 18); do
+            if curl -fsS --max-time 20 "$DRIFTER_TARGET_URL/health"; then
+              echo; echo "service is awake"; exit 0
+            fi
+            echo "attempt $i: not awake yet"; sleep 10
+          done
+          echo "::error::$DRIFTER_TARGET_URL/health never answered after 3 minutes"
+          exit 1
+
+      # every label POST is followed at once by a GET of its run, since spin-down wipes runs
+      - name: T-01 to T-07 on the test repo
+        run: python -m pytest -q tests/test_v1_testrepo.py -k label_online
+
+      - name: Conformance against the reference service
+        if: success() || failure()
+        run: python -m pytest -q tests/test_v1_network.py -k "conformance or schema"

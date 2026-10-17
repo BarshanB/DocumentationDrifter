@@ -8,7 +8,7 @@
 
 | File | What it is |
 |---|---|
-| [endProduct.pdf](endProduct.pdf) | The Phase 2 specification (Teams 15 and 16) as text, section by section, with a box wherever the original shows a figure. Its last section lists where the specification contradicts itself. |
+| [endProduct.txt](endProduct.txt) | The Phase 2 specification (Teams 15 and 16) as plain text, section by section, with a `[DIAGRAM]` line wherever the original shows a figure. Its last section lists where the specification contradicts itself. |
 | [01-system-boundary.png](01-system-boundary.png) | Who is inside the tracker, who is outside, and what crosses the line (section 2.1) |
 | [02-M1-data-flow-and-context.png](02-M1-data-flow-and-context.png) | M1: the data path from a push or an API call to the evidence store |
 | [03-M2-analysis-run-lifecycle.png](03-M2-analysis-run-lifecycle.png) | M2: every way one analysis request can end |

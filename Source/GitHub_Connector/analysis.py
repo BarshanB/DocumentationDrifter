@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import threading
+import time
 import uuid
 from datetime import datetime, timezone
 
@@ -37,10 +39,30 @@ def validate(request: AnalysisRequest) -> None:
         raise invalid("base_commit must be 7 to 40 hexadecimal characters")
 
 
+_slots_lock = threading.Lock()
+_slots: tuple[int, threading.BoundedSemaphore] | None = None
+
+
+def slot() -> threading.BoundedSemaphore:
+    # hands out the shared semaphore that caps concurrent analyses at the configured limit
+    global _slots
+    limit = get_settings().max_concurrent
+    with _slots_lock:
+        if _slots is None or _slots[0] != limit:
+            _slots = (limit, threading.BoundedSemaphore(limit))
+        return _slots[1]
+
+
 def analyze(request: AnalysisRequest) -> AnalysisResult:
-    # compares head against base, classifies each change, saves the run file once
+    # validates, then waits for a slot, so time spent queued never counts against the deadline
     validate(request)
-    with fetch(request.repository, request.commit_id, request.base_commit) as cmp:
+    with slot():
+        return _analyze(request, time.monotonic() + get_settings().analysis_deadline)
+
+
+def _analyze(request: AnalysisRequest, deadline: float) -> AnalysisResult:
+    # compares head against base, classifies each change, saves the run file once
+    with fetch(request.repository, request.commit_id, request.base_commit, deadline) as cmp:
         changes = [
             Change(
                 path=c.path,
@@ -67,7 +89,10 @@ def analyze(request: AnalysisRequest) -> AnalysisResult:
         skipped=sorted(skipped, key=lambda s: s.path),
         created_at=_now(),
     )
-    runs.save(result.analysis_id, runs.dump(result))
+    try:
+        runs.save(result.analysis_id, runs.dump(result))
+    except OSError as exc:
+        raise AnalysisError(ErrorCode.WRITE_FAILED, "The run file could not be saved") from exc
     return result
 
 

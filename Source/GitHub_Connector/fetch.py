@@ -8,6 +8,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -86,8 +87,10 @@ class Comparison:
 class _Git:
     # runs git anonymously inside one temporary clone
 
-    def __init__(self, workdir: Path) -> None:
+    def __init__(self, workdir: Path, deadline: float | None = None) -> None:
         self.workdir = workdir
+        self.deadline = deadline
+        self.timeout = get_settings().git_timeout
         self.env = {
             **os.environ,
             "GIT_TERMINAL_PROMPT": "0",  # fails a private repo at once instead of asking
@@ -101,13 +104,18 @@ class _Git:
     ) -> subprocess.CompletedProcess[bytes]:
         # runs one git command with no credential helper, returns raw bytes
         cmd = ["git", "-c", "credential.helper=", "-c", "core.quotepath=false", *args]
-        proc = subprocess.run(
-            cmd,
-            cwd=cwd or self.workdir / "clone",
-            env=self.env,
-            input=input if input is not None else b"",
-            capture_output=True,
-        )
+        limit, overall = self.timeout, False
+        if self.deadline is not None:
+            remaining = self.deadline - time.monotonic()
+            if remaining <= 0:
+                raise _deadline_passed()
+            if remaining < limit:
+                limit, overall = remaining, True
+        proc = _run(cmd, cwd or self.workdir / "clone", self.env, input or b"", limit)
+        if proc is None:
+            if overall:
+                raise _deadline_passed()
+            raise AnalysisError(ErrorCode.TIMEOUT, f"A git call took longer than {self.timeout:g} s")
         if check and proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd, proc.stdout, proc.stderr)
         return proc
@@ -119,6 +127,48 @@ class _Git:
     def out(self, *args: str) -> str:
         # runs a git command and returns its trimmed text output
         return self.run(*args).stdout.decode("utf-8", "surrogateescape").strip()
+
+
+def _deadline_passed() -> AnalysisError:
+    # words the overall deadline failure
+    return AnalysisError(
+        ErrorCode.TIMEOUT,
+        f"The analysis took longer than {get_settings().analysis_deadline:g} s",
+    )
+
+
+def _run(cmd: list[str], cwd: Path, env: dict, data: bytes, limit: float):
+    # runs one process in its own group, killing the whole group if it overruns; None on timeout
+    group = (
+        {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+        if os.name == "nt"
+        else {"start_new_session": True}
+    )
+    proc = subprocess.Popen(
+        cmd, cwd=cwd, env=env, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, **group,
+    )
+    try:
+        out, err = proc.communicate(data, timeout=limit)
+    except subprocess.TimeoutExpired:
+        _kill_group(proc)
+        proc.communicate()
+        return None
+    return subprocess.CompletedProcess(cmd, proc.returncode, out, err)
+
+
+def _kill_group(proc: subprocess.Popen) -> None:
+    # stops git and every helper it started, such as upload-pack or index-pack
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)], capture_output=True)
+    else:
+        import signal
+
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    proc.kill()
 
 
 def _remote_url(repo: str) -> str:
@@ -140,14 +190,17 @@ def _rmtree(path: Path) -> None:
 
 
 @contextmanager
-def fetch(repo: str, head: str, base: str | None = None) -> Iterator[Comparison]:
+def fetch(
+    repo: str, head: str, base: str | None = None, deadline: float | None = None
+) -> Iterator[Comparison]:
     # clones repo blobless into a temp folder, yields the comparison, deletes the clone on exit
+    # deadline is a time.monotonic() value after which any git call fails with TIMEOUT
     clone_root = get_settings().clone_dir
     if clone_root is not None:
         clone_root.mkdir(parents=True, exist_ok=True)
     workdir = Path(tempfile.mkdtemp(prefix="drifter-", dir=clone_root))
     try:
-        git = _Git(workdir)
+        git = _Git(workdir, deadline)
         _clone(git, repo)
         head_sha = _resolve(git, head)
         base_sha = _resolve(git, base) if base is not None else _first_parent(git, head_sha)

@@ -20,12 +20,14 @@ def listing(body):
     return [(c["path"], c["change_type"]) for c in body["changes"]]
 
 
-def assert_not_found(r, env, asks_full=False):
+def assert_not_found(r, env, asks_full=False, sha=None):
     # checks a COMMIT_NOT_FOUND answer that saved nothing and left no clone
     assert r.status_code == 404, r.text
     body = r.json()
     assert body["code"] == "COMMIT_NOT_FOUND"
     assert ("40-character" in body["message"]) is asks_full
+    if sha is not None:
+        assert body["message"] == f"commit {sha} was not found in octo/demo"
     assert list(env["runs"].iterdir()) == []
     assert list(env["clones"].iterdir()) == []
 
@@ -120,12 +122,12 @@ def test_full_sha_off_every_branch_is_fetched(api, unreachable):
 
 
 def test_unknown_full_commit(api, line, v1_env):
-    assert_not_found(analyse(api, "1" * 40), v1_env)
+    assert_not_found(analyse(api, "1" * 40), v1_env, sha="1" * 40)
 
 
 def test_unknown_full_base_commit(api, line, v1_env):
     _, (_, _, a3) = line
-    assert_not_found(analyse(api, a3, base_commit="2" * 40), v1_env)
+    assert_not_found(analyse(api, a3, base_commit="2" * 40), v1_env, sha="2" * 40)
 
 
 def test_sha_that_names_a_tree_is_not_a_commit(api, line, v1_env):

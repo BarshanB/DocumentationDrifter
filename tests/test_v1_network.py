@@ -60,10 +60,18 @@ def test_schema_comparison_catches_a_real_difference():
     theirs = json.loads(json.dumps(ours))
     assert reference.schema_differences(ours, theirs) == []
     theirs["components"]["schemas"]["Change"]["properties"]["extra"] = {"type": "string"}
-    theirs["components"]["schemas"]["ErrorCode"]["enum"].append("LLM_UNAVAILABLE")
+    theirs["components"]["schemas"]["ChangeType"]["enum"].append("EXTRA")
     found = reference.schema_differences(ours, theirs)
     assert any("Change.extra" in f for f in found)
-    assert any("ErrorBody.code" in f for f in found)
+    assert any("Change.change_type" in f for f in found)
+
+
+def test_our_schema_has_the_reference_shapes():
+    # pins the two details the live comparison found on 2026-10-17
+    doc = our_openapi()
+    schemas = doc["components"]["schemas"]
+    assert schemas["ErrorBody"]["properties"]["code"] == {"type": "string", "title": "Code"}
+    assert "documentation_file" in schemas["Finding"]["required"]
 
 
 @pytest.mark.network
@@ -135,6 +143,8 @@ def test_conformance(case, target, github_env, live_reference, request):
     their = theirs(method, path, body)
     assert ours.status_code == their.status_code, f"{case}: status ours {ours.status_code}, theirs {their.status_code}"
     found = reference.differences(reference.normalise(ours.json()), reference.normalise(their.json()))
+    allowed = reference.KNOWN_CASE_DIFFERENCES.get(case, ("",))[0]
+    found = [f for f in found if not (allowed and f.startswith(allowed + ":"))]
     assert found == [], f"{case}: " + " | ".join(found)
     if method == "POST" and ours.status_code == 200:
         # checks each service serves back its own POST bytes

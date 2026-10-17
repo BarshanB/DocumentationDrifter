@@ -69,15 +69,15 @@ class Finding(BaseModel):
     finding_id: str
     issue_type: str
     code_file: str
-    documentation_file: str | None = None
+    documentation_file: str | None
     change_category: Category
     explanation: str
     verification_status: str
 
 
 class ErrorBody(BaseModel):
-    # answers every failed request, nothing is saved alongside it
-    code: ErrorCode
+    # answers every failed request, nothing is saved alongside it; code is a plain string, as theirs is
+    code: str
     message: str
 
 
@@ -107,4 +107,4 @@ class AnalysisError(Exception):
 
     def body(self) -> ErrorBody:
         # renders the error as the contract's ErrorBody
-        return ErrorBody(code=self.code, message=self.message)
+        return ErrorBody(code=self.code.value, message=self.message)

@@ -110,25 +110,51 @@ def test_validation_also_guards_direct_calls(no_remote):
 
 # --- unknown runs ---------------------------------------------------
 
-UNKNOWN_RUN = {"detail": "Not Found"}
+def unknown_run(analysis_id):
+    # spells the reference service's body for a run that doesn't exist
+    return {"code": "ANALYSIS_NOT_FOUND", "message": f"analysis {analysis_id} does not exist"}
 
 
 def test_unknown_but_well_formed_id_is_404(api, v1_env):
     r = api.get("/system/analysis/an-" + "0" * 32)
     assert r.status_code == 404
-    assert r.json() == UNKNOWN_RUN
+    assert r.json() == unknown_run("an-" + "0" * 32)
 
 
 @pytest.mark.parametrize(
     "analysis_id",
-    ["nope", "an-123", "an-" + "G" * 32, "AN-" + "0" * 32, "..%2F..%2Fsecret", "../secret", "an-" + "0" * 32 + ".json"],
+    ["nope", "an-123", "an-" + "G" * 32, "AN-" + "0" * 32, "an-" + "0" * 32 + ".json"],
 )
 def test_malformed_id_gives_the_same_404_and_reads_nothing_outside(api, v1_env, analysis_id):
     secret = v1_env["runs"].parent / "secret.json"
     secret.write_text('{"leak": true}')
     r = api.get(f"/system/analysis/{analysis_id}")
     assert r.status_code == 404
-    assert r.json() == UNKNOWN_RUN
+    assert r.json() == unknown_run(analysis_id)
+
+
+@pytest.mark.parametrize("path", ["..%2F..%2Fsecret", "../secret"])
+def test_path_traversal_reads_nothing_outside(api, v1_env, path):
+    secret = v1_env["runs"].parent / "secret.json"
+    secret.write_text('{"leak": true}')
+    r = api.get(f"/system/analysis/{path}")
+    assert r.status_code == 404
+    assert "leak" not in r.text
+
+
+@pytest.mark.parametrize(
+    "body, message",
+    [
+        ({**GOOD, "repository": "not-a-repo"}, "repository must use the format owner/name"),
+        ({**GOOD, "commit_id": "xyz"}, "commit_id must be a 7-40 character hexadecimal commit SHA"),
+        ({**GOOD, "base_commit": "xyz"}, "base_commit must be a 7-40 character hexadecimal commit SHA"),
+        ({**GOOD, "repository": 7}, "repository has the wrong type"),
+        ({**GOOD, "commit_id": ["a" * 40]}, "commit_id has the wrong type"),
+        ({**GOOD, "base_commit": 1234567}, "base_commit has the wrong type"),
+    ],
+)
+def test_messages_use_the_reference_wording(api, no_remote, body, message):
+    assert_invalid(api.post("/system/analyze", json=body), message)
 
 
 @pytest.mark.parametrize(

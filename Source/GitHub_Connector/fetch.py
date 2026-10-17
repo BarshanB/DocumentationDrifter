@@ -201,8 +201,8 @@ def fetch(
     try:
         git = _Git(workdir, deadline)
         _clone(git, repo)
-        head_sha = _resolve(git, head)
-        base_sha = _resolve(git, base) if base is not None else _first_parent(git, head_sha)
+        head_sha = _resolve(git, head, repo)
+        base_sha = _resolve(git, base, repo) if base is not None else _first_parent(git, head_sha)
         cmp = Comparison(repo=repo, head=head_sha, base=base_sha, _git=git)
         # compares a first audit against the empty tree, so every file counts as added
         old = base_sha if base_sha is not None else git.out("hash-object", "-t", "tree", "--stdin")
@@ -222,11 +222,11 @@ def _clone(git: _Git, repo: str) -> None:
     if proc.returncode != 0:
         raise AnalysisError(
             ErrorCode.REPOSITORY_NOT_FOUND,
-            f"Repository {repo} not found or is not public",
+            f"repository {repo} was not found or is not public",
         )
 
 
-def _resolve(git: _Git, sha: str) -> str:
+def _resolve(git: _Git, sha: str, repo: str) -> str:
     # expands a SHA to its full 40-hex form, fetching a full SHA by id when no branch reaches it
     sha = sha.lower()
     full = len(sha) == 40
@@ -236,7 +236,7 @@ def _resolve(git: _Git, sha: str) -> str:
     proc = git.run("rev-parse", "--verify", "--quiet", "--end-of-options", f"{sha}^{{commit}}", check=False)
     if proc.returncode != 0:
         if full:
-            raise AnalysisError(ErrorCode.COMMIT_NOT_FOUND, f"Commit {sha} not found")
+            raise AnalysisError(ErrorCode.COMMIT_NOT_FOUND, f"commit {sha} was not found in {repo}")
         raise AnalysisError(
             ErrorCode.COMMIT_NOT_FOUND,
             f"Commit {sha} not found or ambiguous; a short SHA only works for a commit on a "

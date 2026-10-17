@@ -25,8 +25,6 @@ STATUS_FOR = {
     ErrorCode.WRITE_FAILED: 500,
 }
 
-# answers an unknown run like any unknown path, pending a probe of the reference service (ticket 12)
-NOT_FOUND = {"detail": "Not Found"}
 
 _ERRORS = {400: {"model": ErrorBody}, 404: {"model": ErrorBody}, 500: {"model": ErrorBody}}
 
@@ -66,7 +64,7 @@ def _describe(error: dict) -> str:
     missing = error.get("type") == "missing" or error.get("input", ...) is None
     if missing and field in ("repository", "commit_id"):
         return f"{field} is required"
-    return f"{field} must be a string"
+    return f"{field} has the wrong type"
 
 
 @router.post("/analyze", response_model=AnalysisResult, responses=_ERRORS)
@@ -80,7 +78,9 @@ def get_analysis(analysis_id: str) -> Response:
     # serves a saved run byte for byte, any unknown or malformed id gets the same 404
     data = runs.load(analysis_id)
     if data is None:
-        return JSONResponse(status_code=404, content=NOT_FOUND)
+        # matches the reference service's body for a run that doesn't exist (probed 2026-10-17)
+        message = f"analysis {analysis_id} does not exist"
+        return JSONResponse(status_code=404, content={"code": "ANALYSIS_NOT_FOUND", "message": message})
     return _json(data)
 
 

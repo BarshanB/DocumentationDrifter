@@ -102,7 +102,7 @@ def test_missing_repository_is_refused_and_nothing_saved(api, v1_env):
     assert r.status_code == 404
     assert r.json() == {
         "code": "REPOSITORY_NOT_FOUND",
-        "message": "Repository octo/nothing-here not found or is not public",
+        "message": "repository octo/nothing-here was not found or is not public",
     }
     assert list(v1_env["runs"].iterdir()) == []
 

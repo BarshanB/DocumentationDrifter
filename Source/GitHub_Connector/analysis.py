@@ -32,11 +32,11 @@ def validate(request: AnalysisRequest) -> None:
         return AnalysisError(ErrorCode.INVALID_REQUEST, message)
 
     if not REPOSITORY.match(request.repository):
-        raise invalid("repository must be in owner/name format")
+        raise invalid("repository must use the format owner/name")
     if not SHA.match(request.commit_id):
-        raise invalid("commit_id must be 7 to 40 hexadecimal characters")
+        raise invalid("commit_id must be a 7-40 character hexadecimal commit SHA")
     if request.base_commit is not None and not SHA.match(request.base_commit):
-        raise invalid("base_commit must be 7 to 40 hexadecimal characters")
+        raise invalid("base_commit must be a 7-40 character hexadecimal commit SHA")
 
 
 _slots_lock = threading.Lock()

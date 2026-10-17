@@ -26,6 +26,10 @@ KNOWN_DIFFERENT_FIELDS = ("config_version",)
 KNOWN_CATEGORY_SWAPS = {("DOCUMENTATION", "OTHER")}
 # allows enum values only our schema has
 KNOWN_SCHEMA_EXTRAS = {"DOCUMENTATION"}
+# allows a named difference in one case, each agreed by Kaan
+KNOWN_CASE_DIFFERENCES = {
+    "unfetchable-short-sha": ("body.message", "decision Q6: ours asks for the full 40-character SHA, 2026-10-17"),
+}
 
 
 def warm(base_url: str = REFERENCE_URL, tries: int = 12, wait: float = 10) -> bool:

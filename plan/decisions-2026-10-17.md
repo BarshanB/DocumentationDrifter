@@ -65,6 +65,7 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 **Q6 · Short SHAs.** What happens to a short SHA that can't be fetched, or that matches more than one commit?
 **Answer:** 404 `COMMIT_NOT_FOUND`, with a message asking for the full 40-character SHA.
 **Why:** GitHub only lets you fetch a commit that isn't on a branch or tag by its full SHA. Reusing an existing contract error code adds nothing new, and the Action always sends full SHAs anyway.
+**Update (2026-10-17, after the first conformance run):** the reference service answers the same case with "commit 1234567 was not found in owner/name". Kaan kept our message; it is the one named known difference in `tests/reference.py` (`KNOWN_CASE_DIFFERENCES`). Every other message, the unknown-run body (`ANALYSIS_NOT_FOUND`) and the schema now match the reference service.
 
 **Q7 · Time limits and concurrency.** What deadline, git timeout and number of simultaneous analyses?
 **Answer:** 120 s per analysis, 60 s per git call, and two analyses at once, all in config.

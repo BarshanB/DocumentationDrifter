@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** built locally; the last two checks need a push, which waits for Kaan
+**Status:** done. CI runs on every pull request; after the pipefail fix it fails red on a failing test, and the run on `kaan_v1` before the merge was green (2026-10-17).
 
 **Spec:** plan/spec-v1.1.md, user stories 53
 

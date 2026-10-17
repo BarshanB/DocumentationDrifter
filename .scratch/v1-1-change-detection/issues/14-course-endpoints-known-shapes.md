@@ -4,14 +4,14 @@
 
 **Blocked by:** 09 (GitHub and the reference service: network smoke test, anonymous not-found, and the conformance harness)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-17). Every shape was probed on the reference service first: 201 `{session_id}`, 409 for a repeated id, 400 and 404 bodies of `{message, source: "system"}` with the reference's exact messages, and `TestSetupRequest` copied field for field. Nine error cases and a setup-then-report case joined the conformance set, and all of them matched the reference when checked from Chrome. One deliberate difference: a setup with no body answers "body is required", where the reference says " is required" with an empty field name. It is not in the conformance set until Kaan agrees to record it.
 
 **Spec:** plan/spec-v1.1.md, user stories 57
 
-- [ ] Both routes are on the /system router, with request and response schemas copied from the reference service's OpenAPI, and the offline schema test covers them.
-- [ ] A report for an unknown session gives 404 with a body of exactly a message and source system.
-- [ ] A malformed setup body, or a missing session_id, gets the status and body that a live probe of the reference service shows. The INVALID_REQUEST mapping is not assumed to apply here.
-- [ ] A well-formed setup request is accepted with the status and response shape a live probe of the reference service shows. Nothing beyond that is assumed about what setup does.
-- [ ] Analyses run outside any session are unaffected by these routes.
-- [ ] The conformance set gains the unknown-session and malformed-body cases.
-- [ ] The whole suite is green, v0 included.
+- [x] Both routes are on the /system router, with request and response schemas copied from the reference service's OpenAPI, and the offline schema test covers them.
+- [x] A report for an unknown session gives 404 with a body of exactly a message and source system.
+- [x] A malformed setup body, or a missing session_id, gets the status and body that a live probe of the reference service shows. The INVALID_REQUEST mapping is not assumed to apply here.
+- [x] A well-formed setup request is accepted with the status and response shape a live probe of the reference service shows. Nothing beyond that is assumed about what setup does.
+- [x] Analyses run outside any session are unaffected by these routes.
+- [x] The conformance set gains the unknown-session and malformed-body cases.
+- [x] The whole suite is green, v0 included.

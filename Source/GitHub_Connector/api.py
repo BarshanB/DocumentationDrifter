@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 
-from GitHub_Connector import runs
+from GitHub_Connector import course, runs
 from GitHub_Connector.analysis import analyze
 from GitHub_Connector.schemas import (
     AnalysisError,
@@ -49,8 +49,10 @@ def _analysis_error(_, exc: AnalysisError) -> JSONResponse:
 
 
 @app.exception_handler(RequestValidationError)
-def _bad_request(_, exc: RequestValidationError) -> JSONResponse:
-    # answers FastAPI's own validation failures as 400 INVALID_REQUEST, never 422
+def _bad_request(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # answers FastAPI's own validation failures as 400, never 422, in the error shape of the route's family
+    if request.url.path.startswith("/system/test/"):
+        return course.course_error(400, course.describe(exc.errors()[0]))
     err = AnalysisError(ErrorCode.INVALID_REQUEST, _describe(exc.errors()[0]))
     return _analysis_error(None, err)
 
@@ -90,4 +92,5 @@ def health() -> dict[str, str]:
     return {"status": "ok", "storage": "local"}
 
 
+router.include_router(course.router)
 app.include_router(router)

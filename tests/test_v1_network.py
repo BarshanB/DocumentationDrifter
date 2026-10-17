@@ -3,6 +3,7 @@
 import json
 import os
 import time
+import uuid
 from pathlib import Path
 
 import httpx
@@ -114,6 +115,16 @@ CASES = {
     "unknown-analysis-id": ("GET", "/analysis/an-" + "0" * 32, None),
     "malformed-analysis-id": ("GET", "/analysis/not-an-id", None),
     "health": ("GET", "/health", None),
+    # covers the course routes' error answers (ticket 14), each needs no session to exist
+    "course-report-unknown-session": ("GET", "/test/report?session_id=drifter-conformance-never-set-up", None),
+    "course-report-missing-session-id": ("GET", "/test/report", None),
+    "course-report-empty-session-id": ("GET", "/test/report?session_id=", None),
+    "course-setup-missing-session-id": ("POST", "/test/setup", {}),
+    "course-setup-wrong-types": ("POST", "/test/setup", {"session_id": 7}),
+    "course-setup-blank-session-id": ("POST", "/test/setup", {"session_id": ""}),
+    "course-setup-long-session-id": ("POST", "/test/setup", {"session_id": "x" * 201}),
+    "course-setup-wrong-setup-type": ("POST", "/test/setup", {"session_id": "x", "setup": "str"}),
+    "course-setup-array-body": ("POST", "/test/setup", [1]),
 }
 
 
@@ -150,6 +161,21 @@ def test_conformance(case, target, github_env, live_reference, request):
         # checks each service serves back its own POST bytes
         assert target.get(f"/system/analysis/{ours.json()['analysis_id']}").content == ours.content
         assert theirs("GET", f"/analysis/{their.json()['analysis_id']}").content == their.content
+
+
+@pytest.mark.network
+def test_course_session_conformance(target, github_env, live_reference):
+    # opens the same fresh session on both services, then compares setup, repeat setup and report
+    sid = f"drifter-conformance-{uuid.uuid4().hex}"
+    for body in ({"session_id": sid, "setup": {"probe": True}}, {"session_id": sid}):
+        ours = target.post("/system/test/setup", json=body)
+        their = theirs("POST", "/test/setup", body)
+        assert (ours.status_code, ours.json()) == (their.status_code, their.json()), f"setup: ours {ours.text}, theirs {their.text}"
+    ours = target.get("/system/test/report", params={"session_id": sid})
+    their = theirs("GET", f"/test/report?session_id={sid}")
+    assert ours.status_code == their.status_code == 200
+    # compares only the shape, the counts and basis describe two different codebases
+    assert reference.key_shape(ours.json()) == reference.key_shape(their.json())
 
 
 def test_differences_name_the_field_and_allow_only_known_ones():

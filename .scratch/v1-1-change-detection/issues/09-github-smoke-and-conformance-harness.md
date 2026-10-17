@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Tracer: one commit analysed, saved and served back, and a missing repository refused)
 
-**Status:** built (the private-repo checks moved to tests/private_tests and run only while MuhammadSban/DocumentationDrifter is private; tests/public_tests covers it while public, 2026-10-17); the reference-service parts are unverified. Can't reach the reference service from this workspace (its proxy refuses doc-tracker-5t4s.onrender.com), so:
+**Status:** done. The reference-service parts ran live in CI on 2026-10-17 and again from Kaan's Chrome against the Railway deploy (all 15 cases and the six shared schemas matched). The private-repo checks live in tests/private_tests and run only while MuhammadSban/DocumentationDrifter is private; tests/public_tests covers it while public.
 - the captured OpenAPI document isn't in the repo yet. Run `python tests/reference.py capture` from any machine that can reach it; until then the offline schema test skips with that instruction.
 - the live schema test and the four conformance cases are written but have only skipped here. CI sets DRIFTER_REQUIRE_REFERENCE=1, so they run and fail loudly there.
 - recorded: this workspace injects GitHub credentials outside git's control (an anonymous `git ls-remote` of the private repo succeeds), so the private-repo check skips here with that reason. CI checks out with persist-credentials false and sets DRIFTER_REQUIRE_ANONYMOUS=1, so it runs there. The recording credential helper was never called.

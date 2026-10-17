@@ -4,7 +4,7 @@
 
 **Blocked by:** 10 (Public deployment on Railway's free plan); 12 (Full conformance set against the reference service)
 
-**Status:** workflow written; the passing run needs the push, the deploy (10) and the public test repo (11). It takes target_url as an input, or the DRIFTER_TARGET_URL repository variable, and reads the test repo from the DRIFTER_TEST_REPO variable. The target path (DRIFTER_TARGET_URL) was dry-run on 2026-10-17 against a locally served copy.
+**Status:** workflow written; the passing run now waits only for the public test repo (11), since the push (02) and the deploy (10) are done. Run it with target_url https://documentationdrifter-production.up.railway.app/system once DRIFTER_TEST_REPO is set.
 
 **Spec:** plan/spec-v1.1.md, user stories 54
 

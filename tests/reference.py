@@ -15,7 +15,7 @@ REFERENCE_URL = os.environ.get("DRIFTER_REFERENCE_URL", "https://doc-tracker-5t4
 CAPTURED_OPENAPI = Path(__file__).parent / "data" / "reference-openapi.json"
 
 # names every model the two services must agree on
-SHARED_MODELS = ["AnalysisRequest", "AnalysisResult", "Change", "Finding", "Skipped", "ErrorBody"]
+SHARED_MODELS = ["AnalysisRequest", "AnalysisResult", "Change", "Finding", "Skipped", "ErrorBody", "TestSetupRequest"]
 
 # lists the only differences allowed between the services, in one place (ticket 09)
 # removes these fields before comparing, they differ every run or name the build
@@ -83,6 +83,15 @@ def differences(ours: Any, theirs: Any, where: str = "body") -> list[str]:
             return [f"{where}: {len(ours)} items in ours, {len(theirs)} in theirs"]
         return [d for i, (a, b) in enumerate(zip(ours, theirs)) for d in differences(a, b, f"{where}[{i}]")]
     return [] if ours == theirs else [f"{where}: ours {ours!r}, theirs {theirs!r}"]
+
+
+def key_shape(body: Any) -> Any:
+    # reduces a body to its keys and value types, for answers whose values differ by design
+    if isinstance(body, dict):
+        return {k: key_shape(v) for k, v in body.items()}
+    if isinstance(body, list):
+        return [key_shape(v) for v in body]
+    return type(body).__name__
 
 
 # --- schemas ---------------------------------------------------------

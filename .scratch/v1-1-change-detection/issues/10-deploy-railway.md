@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Tracer: one commit analysed, saved and served back, and a missing repository refused)
 
-**Status:** built and checked locally; the deploy waits for Kaan's approval. Checked on 2026-10-17 with a stand-in base image (Docker Hub is blocked from this workspace, so `python:3.12-slim` was replaced locally by an Ubuntu 24.04 + Python 3.12 image): the image includes git and no credentials; only /system routes answer; health and Hello-World 7fd1a60 work with byte-identical GET; and psf/requests d568f47 plus octocat/Spoon-Knife ran at once under a 512 MB hard cap with no OOM kill (34 MiB afterwards).
+**Status:** done. Deployed on Railway on 2026-10-17 from `main` (25e4d06) at https://documentationdrifter-production.up.railway.app, port 8080. Health, Hello-World with a byte-identical GET, and all 15 conformance cases were checked against it from Chrome. Sleep when idle (Serverless) is still off, waiting for Kaan.
 
 **Spec:** plan/spec-v1.1.md, user stories 9, 55, 56
 

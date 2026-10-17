@@ -43,6 +43,53 @@ def client():
     return TestClient(app)
 
 
+# --- v1 fixtures -----------------------------------------------------
+
+
+@pytest.fixture
+def v1_env(monkeypatch, tmp_path):
+    # repoints v1 settings at folders under tmp_path / "repo", away from v0's test.db
+    root = tmp_path / "repo"
+    paths = {
+        "remotes": root / "remotes",
+        "work": root / "work",
+        "runs": root / "runs",
+        "clones": root / "clones",
+    }
+    for p in paths.values():
+        p.mkdir(parents=True)
+    monkeypatch.setenv("DRIFTER_REMOTE_BASE_URL", paths["remotes"].as_uri() + "/")
+    monkeypatch.setenv("DRIFTER_RUNS_DIR", str(paths["runs"]))
+    monkeypatch.setenv("DRIFTER_CLONE_DIR", str(paths["clones"]))
+
+    from GitHub_Connector.settings import get_settings
+
+    get_settings.cache_clear()
+    yield paths
+    get_settings.cache_clear()
+
+
+@pytest.fixture
+def make_repo(v1_env):
+    # builds a fixture repo reachable as owner/name through the remote base URL
+    from repos import FixtureRepo
+
+    def _make(name: str = "octo/demo") -> "FixtureRepo":
+        return FixtureRepo(v1_env["remotes"], v1_env["work"], name)
+
+    return _make
+
+
+@pytest.fixture
+def api(v1_env):
+    # builds a test client against the v1 app, named apart from v0's client
+    from fastapi.testclient import TestClient
+
+    from GitHub_Connector.api import app
+
+    return TestClient(app)
+
+
 def sign(body: bytes, secret: str = SECRET) -> str:
     # signs a body the way GitHub does
     return "sha256=" + hmac.new(

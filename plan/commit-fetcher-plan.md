@@ -1,109 +1,112 @@
-# Commit diff fetcher: plan
+# Commit diff fetcher (the connector)
 
-Scope: the `Source/GitHub_Connector` piece only. Given `owner/name`, a head commit and an optional base commit, return the changed files (status, hunks) and let later steps read any file at either commit. Fits step 3 of the [overall plan](documentation-drifter-plan.md). Nothing has been added to the repo.
+Scope: the connector in `Source/GitHub_Connector/fetch.py`. Given `owner/name`, a head commit and an optional base commit, it lists the changed files and skipped files and lets later steps read any file at either commit. It is the only code that runs git. The step-by-step reasoning is in [GitHub connector, step by step](github-connector-steps.md) (the guide); this file is the connector's interface and what is built.
 
-## What's in the stubs today
+Revised 2026-10-17 to match the v1.1 build. The first version planned hunks, `unidiff` and COPIED changes, all dropped by the [decision log](decisions-2026-10-17.md) (Q2, Q3), and described stubs that the v0 webhook receiver replaced.
 
-*Superseded (2026-10-17).* The stubs this table described (`monitor()`, `get_diff()`, `Change_request`, the `Repository` outline) were replaced by the v0 webhook receiver in `e3a718e`. See the [roadmap](roadmap.md)'s "Where we are: v0" section and its v1 code layout. The fetcher below becomes `fetch.py`, a new module beside the v0 files.
+## Approach: git CLI first, REST later
 
-## Approach: git CLI first, REST as fallback
+Checked live on 2026-10-16: a blobless clone of `psf/requests` with no checkout took about a second and 3.9 MB. After that, `git diff`, `git ls-tree` and `git cat-file` read both commits with no further setup.
 
-Checked live today: `git clone --filter=blob:none --no-checkout` of `psf/requests` took about 1 second and 3.9 MB, then `git diff`, `git ls-tree` and `git show` read both commits with no further setup.
+Why git first (roadmap decision 3):
+- No REST rate limit (60 requests an hour without a token).
+- No 300-file cap. GitHub's `compare` endpoint returns its file list on the first page only, capped at 300; paging walks commits, not files.
+- No dropped patches for large files or binaries.
+- One mechanism for the diff, the file list and the file contents.
 
-Why git first:
-- No REST rate limit (60/h without a token).
-- No 300-file cap. Note: paging `compare` does **not** get past 300 files. GitHub returns the file list on the first page only, capped at 300; paging only walks commits. The [API notes](../github-api/base-head-endpoints.md) suggest otherwise and should be corrected.
-- No dropped patches for large files (`compare` omits `patch` for big diffs and binaries).
-- One mechanism for diff, tree and file content.
+The REST fallback, for hosts without git, is left for v4. The Docker image ships git, so v1 doesn't need it.
 
-REST stays for hosts without `git`, or as a cheap pre-check (repo exists, commit exists) before cloning.
-
-## Interface
+## Interface (v1.1)
 
 ```python
-with fetch(repo: str, head: str, base: str | None = None) as cmp:   # yields a Comparison; clone deleted on exit
+with fetch(repo, head, base=None, deadline=None) as cmp:   # clone deleted when the block exits
+    ...
 
 Comparison
-  repo, head_sha, base_sha           # full 40-char SHAs
-  files: list[FileChange]
-  read(path, side) -> bytes | None   # side = "base" | "head"
-  tree(side) -> list[str]
+  repo
+  head, base                          # full 40-hex SHAs; base is None for a first audit
+  changes: list[FileChange]           # kept files only, see the guide's filter
+  skipped: list[SkippedFile]          # binary, over 1 MB, not UTF-8
+  tree(side) -> list[str]             # kept files at "base" or "head", no blob reads
+  read(path, side) -> bytes | None    # None where the path is missing on that side
 
 FileChange
-  path, status                       # ADDED | MODIFIED | DELETED | RENAMED | COPIED | TYPE_CHANGED
-  old_path                           # set when git saw a rename
-  hunks: list[Hunk]
-  binary: bool
+  path
+  change_type                         # ADDED | MODIFIED | DELETED | RENAMED | TYPE_CHANGED
+  old_path                            # set only for RENAMED, never a hidden path
 
-Hunk
-  old_start, old_len, new_start, new_len
+SkippedFile
+  path, reason                        # "binary file" | "file larger than 1 MB" | "not valid UTF-8"
 ```
 
-Renames: *(updated 2026-10-17 to match the pod's contract)* a rename is one `RENAMED` change with `old_path` set, as T-03 expects. `status` uses the contract's vocabulary: ADDED, MODIFIED, DELETED, RENAMED, COPIED, TYPE_CHANGED. Schema v14 still doesn't follow renames for mapping, so the detector treats the new path as unrelated to the old one.
+- `deadline` is a `time.monotonic()` value from `analyze()`. Any git call after it fails with `TIMEOUT`.
+- COPIED is in the contract's enum but never produced, because only `-M` is used (Q3).
+- There are no hunks. They come back with section-level mapping (after v2; see the [end-product plan](documentation-drifter-plan.md)).
+- v1.2 uses `read()` to send the changed code and docs to the LLM. v1.3 or v2 uses it to read the mapping file.
 
 ## Steps inside `fetch`
 
-| Step | git command | REST fallback |
+| Step | git command | Later REST fallback |
 |---|---|---|
-| Clone | `git clone --filter=blob:none --no-checkout --quiet https://github.com/{o}/{r}.git {tmp}` | none needed |
-| Get commits not on the default branch | `git fetch origin {sha}` | — |
-| Resolve head | `git rev-parse --verify {head}^{commit}` | `GET /repos/{o}/{r}/commits/{head}` → `sha` |
-| Default base | `git rev-parse {head}^` (first parent; none for a root commit) | `parents[0].sha` |
-| Changed files | `git diff --name-status -M {base} {head}` | `GET /compare/{base}...{head}` → `files[]` |
-| ~~Hunks~~ | ~~`git diff -U0 -M {base} {head}` parsed with `unidiff`~~ *Decided 2026-10-17 (Q2): dropped from v1.1.* | each file's `patch` (missing if too large) |
-| File list | `git ls-tree -r --name-only {sha}` | `GET /git/trees/{sha}?recursive=1` |
-| File content | `git show {sha}:{path}` | `GET /contents/{path}?ref={sha}` (raw) |
+| Clone | `git -c credential.helper= clone --filter=blob:none --no-checkout --quiet {url} {tmp}` | none needed |
+| Fetch a commit no branch reaches | `git fetch --filter=blob:none origin {full sha}`, only when it isn't in the clone | — |
+| Resolve a SHA | `git rev-parse --verify {sha}^{commit}` | `GET /repos/{o}/{r}/commits/{sha}` → `sha` |
+| Default base | `git rev-parse {head}^1`; none for a root commit | `parents[0].sha` |
+| First audit | diff against the empty tree (`git hash-object -t tree --stdin`) | — |
+| Changed files and modes | `git diff --raw -z -M --no-abbrev {base} {head}` | `GET /compare/{base}...{head}` → `files[]` |
+| Binaries, plus one batch fetch of changed blobs | `git diff --numstat -z -M {base} {head}` | — |
+| Sizes | `git cat-file --batch-check` | — |
+| NUL and UTF-8 checks | `git cat-file --batch` | — |
+| File list | `git ls-tree -r -z {sha}` (no `-l`) | `GET /git/trees/{sha}?recursive=1` |
+| File content | `git cat-file blob {sha}:{path}` | `GET /contents/{path}?ref={sha}` (raw) |
 
-*Decided 2026-10-17 (Q2, Q3):* hunks are dropped, because nothing in the contract reads them; v1.2 may pass the plain `git diff` text to the LLM. `-M` is used without `-C`, so COPIED is never produced.
+## Errors
 
-## Errors (maps to the spec codes)
-
-| Situation | git signal | REST signal | Spec code |
-|---|---|---|---|
-| Bad `owner/name` or SHA format | checked before any call | — | `INVALID_REQUEST` (400) |
-| Repo missing or private | clone exits 128, "not found" / auth prompt blocked | 404 | `REPOSITORY_NOT_FOUND` (404), the pod's contract code |
-| Unknown commit | `rev-parse` fails after fetch | 422 on `/commits`, 404 on `/compare` | `COMMIT_NOT_FOUND` (404) |
-| Root commit, no base given | `{head}^` fails | `parents` empty | diff against the empty tree (every file added) |
-| Too slow / too big | `timeout` on each subprocess | rate limit 403/429 | `TIMEOUT` |
+| Situation | git signal | Code |
+|---|---|---|
+| Bad `owner/name` or SHA format | checked in `analyze()` before any git call | `INVALID_REQUEST` (400) |
+| Repo missing or private | the clone fails | `REPOSITORY_NOT_FOUND` (404) |
+| Unknown, non-commit, unfetchable or ambiguous SHA | `rev-parse` fails | `COMMIT_NOT_FOUND` (404); a short SHA gets a message asking for the full 40-character SHA |
+| A git call over 60 s, or the 120 s deadline passed | timeout; the process group is killed | `TIMEOUT` (500) |
+| Root commit with no base given | `{head}^1` fails | not an error: a first audit, every file ADDED |
 
 ## Safety (REQ-06)
 
-- Fresh temp dir per run, `--no-checkout`, deleted at the end. Nothing in the repo is installed, imported or run.
-- `GIT_TERMINAL_PROMPT=0` so a private repo fails fast instead of waiting for a password.
-- A timeout on every git call, and a cap on changed-file count.
+- A fresh temporary folder per run, no checkout, deleted at the end, even after an error. Nothing from the repo is installed, imported or run.
+- `GIT_TERMINAL_PROMPT=0` and an empty credential helper, so a private repo fails fast and no stored credentials are used.
+- Every git call has a timeout and runs in its own process group, so a killed call leaves no helper behind.
+- At most two analyses at once (a semaphore in `analyze()`).
 
 ## Tools
 
-| Need | Tool | Why |
-|---|---|---|
-| Fetch and diff | `git` CLI via `subprocess` | Already installed everywhere; GitPython/pygit2 add little |
-| Parse diffs | `unidiff` | Handles hunks, added/removed files, renames, binary markers |
-| Data shapes | Pydantic v2 (or dataclasses until the API exists) | Same models feed `POST /analyze` later |
-| REST fallback | `httpx` | Timeouts and headers built in; `requests` works too |
-| Tests | `pytest` | |
+- The git CLI through `subprocess`.
+- Dataclasses inside the connector; Pydantic only for the API models.
+- No `unidiff` (Q2).
+- `httpx` only in the tests, and for the REST fallback when it comes.
 
 ## Tests
 
-Built from tiny repos the tests create with `git init` in `tmp_path`, so they need no network and the expected answer is exact:
+Each test builds a small repo with git under `tmp_path` and checks the answer through the `/system` API (the spec's one test seam):
 
-1. Modify one line → one `MODIFIED` file.
-2. Add a file, delete a file → `ADDED` and `DELETED`.
-3. Rename → `old_path` set.
-4. No base given → base is the head's parent.
-5. Root commit → every file `added`.
-6. Unknown SHA → `COMMIT_NOT_FOUND`.
-7. 301+ changed files → all returned (the case REST can't do).
-8. `read(path, "base")` and `read(path, "head")` return the right content; missing side returns `None`.
-9. The fixture repo is byte-identical before and after (AC-09).
+| Case | Where |
+|---|---|
+| One modified file → one MODIFIED | `test_v1_tracer.py` |
+| An added and a deleted file → ADDED and DELETED | `test_v1_tracer.py` |
+| A rename → one RENAMED with `old_path`; copies → ADDED | `test_v1_changes.py` |
+| No base → first parent; root commit → base `null` and every file ADDED | `test_v1_tracer.py`, `test_v1_commits.py` |
+| Unknown SHA → COMMIT_NOT_FOUND | `test_v1_commits.py` |
+| 301 or more changed files all returned | `test_v1_changes.py` |
+| Binary, oversize and non-UTF-8 files → `skipped[]` | `test_v1_skipped.py` |
+| Fixture repo byte-identical before and after (AC-09) | `test_v1_tracer.py` |
 
-One optional network test against a small public repo, skipped when offline.
+`read()` and `tree()` are checked in review: their first user is v1.2. Network tests against `octocat/Hello-World` skip when offline.
 
-## Open questions for Kaan
+## Settled questions
 
-1. **git vs REST as the main path.** This thread was first set up to use the REST `compare` endpoint; the overall plan and this one recommend git. Recommended: git.
-2. **Pydantic now or later.** Recommended: plain dataclasses for the fetcher, switch when the API models land.
-3. **Test repo.** The project repo is private, so a public repo with labelled cases is still needed for end-to-end checks.
+1. **git or REST as the main path:** git (roadmap decision 3).
+2. **Pydantic now or later:** dataclasses in the connector, Pydantic for the API models.
+3. **Test repo:** built deterministically by `tools/testrepo.py` (ticket 11). It is made public once Kaan approves.
 
 ## Left out on purpose (minimal first)
 
-Webhooks and `monitor()`, caching clones between runs, following renames, private-repo tokens, and any language-specific parsing (that's step 7).
+Webhooks (v4), caching clones between runs, following renames, private-repo tokens, the REST fallback, and language-specific parsing (sectioning, after v2).

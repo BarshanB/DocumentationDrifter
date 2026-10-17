@@ -1,134 +1,105 @@
-# DocumentationDrifter: what we're building and how
+# DocumentationDrifter: the end product and where each part lands
 
-Scanned 2026-10-16 at `main` @ `5b74560`. Sources: the repo (README, `Skills/CLAUDE.md`, `Models/documentation-tracker-schema-v14.pdf`, `Models/WebHookConnectors.png`, `Source/GitHub_Connector/*`), the Phase 2 spec (`/mnt/project-files/phase2.pdf`), and the earlier API notes in [base-head-endpoints.md](/mnt/project-files/github-api/base-head-endpoints.md). Nothing was changed in the repo.
+The Phase 2 spec (`phase2.pdf`, the pod's specification) and schema v14 (`Models/documentation-tracker-schema-v14.pdf`) describe the **end product**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it. The [roadmap](roadmap.md) is the plan to follow; the [decision log](decisions-2026-10-17.md) has the reasons. Terms are as in [CONTEXT.md](../CONTEXT.md).
 
-> *Superseded in part (2026-10-17).* This is a snapshot from `5b74560`. Where it differs from the [roadmap](roadmap.md), the roadmap wins. In particular, the webhook and GitHub App path is v4, after Phase 5 (roadmap decision 14), the v3 GitHub Action is the only Phase 5 trigger, and an Action's head and base follow [guide step 3](github-connector-steps.md).
+Revised 2026-10-17 to match the decisions and the v1.1 build. The first version of this file was a snapshot of `main` at `5b74560`.
 
-> *Superseded (2026-10-17, [decision log](decisions-2026-10-17.md)).* The detection design below (hand-written rule, hunk overlap, section selectors, a confidence value) no longer applies. An LLM decides drift from v1.2 (Q1, Q9), there is no mapping file before v1.3 or v2 (Q10), hunks are dropped (Q2), `Finding` has no confidence field (Q13), and the error codes follow the pod's contract plus `LLM_UNAVAILABLE` (Q16). Read the [roadmap](roadmap.md) for the current plan; this file is kept as history.
+## 1. The end product, in one paragraph
 
-## 1. What we're building, in one paragraph
+A read-only service, called by a GitHub Action on every push and pull request, that works out what changed between two commits of a public repo and flags documentation that is now missing or outdated. It does this through a living map between doc sections and the code they describe (the "sectioning" of phase2.pdf §7.2 and schema v14). Every finding is `PENDING_REVIEW` until an authorised human confirms or dismisses it. The decision, reviewer and timestamp are recorded, and the tool never edits code or docs. Each run is saved as one JSON file that can be fetched back unchanged. The final version is deterministic: the same inputs give the same findings.
 
-A **read-only web service** that takes a public GitHub repo plus a head commit (and an optional base commit), works out what changed between the two, and uses an **authored mapping file in the repo** (doc section ↔ code selectors) to flag documentation that is now **missing or outdated**. Every finding is `PENDING_REVIEW` for a human. Each run is saved as one JSON file. A **GitHub Action** calls the service on push or PR and posts the result back. No LLM runs inside the service (spec §8.2); detection is rule-based and repeatable.
+## 2. What changed since Phase 2
 
-Interface (spec §5, schema M4):
+| Phase 2 said | Now | Why |
+|---|---|---|
+| No GenAI in the running system; a hand-written rule-based detector (§8.1, §8.2) | An LLM decides drift from **v1.2**, probabilistic on purpose for now; the **final version** is deterministic | Decision 4 (Q1, Q9); also Kaan's note in `Source/LLM_Shell/LLM.md` |
+| A confidence rating in Phase 4; AC-10 within 0.05 | No confidence field; AC-10 is checked without that clause, and the LLM's reasoning goes in `explanation` | Decision 5 (Q13); the shared contract has no such field |
+| A mapping file is required (M2, M3) | None in v1.1 or v1.2; the mapping file arrives in **v1.3** if time allows, otherwise **v2** | Q10 |
+| Section-level mapping (sectioning, schema v14) | **After v2.** The roadmap lists it under v4, because `Finding` is file-level in the shared contract and the pod would have to extend it | Roadmap "What this changes" 3 |
+| Changed lines from `git diff -U0` (hunks) | Dropped from v1.1; they come back with section-level mapping | Q2 |
+| Failed analyses saved as HTTP 200 with status ERROR (M2) | 400, 404 or 500 with an `ErrorBody`, nothing saved | Decision 13; matches the reference service |
+| Error codes `REPO_NOT_FOUND`, `REPO_NOT_ACCESSIBLE`, `INVALID_CONFIG`, `CHECKS_SKIPPED`, `DETECTOR_ERROR` | The contract's codes: `INVALID_REQUEST`, `REPOSITORY_NOT_FOUND`, `COMMIT_NOT_FOUND`, `TIMEOUT`, `WRITE_FAILED`; `LLM_UNAVAILABLE` from v1.2; `INVALID_CONFIG` returns with the mapping file | Reference service; Q16 |
+| `POST /analyze`, `GET /analysis/{id}` | The same under `/system`, plus `GET /system/health` | Reference service |
+| Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, `WebHookConnectors.png`) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
+| A documentation viewer in Phase 3 (§6.1) | A minimal read-only viewer in **v3**, only if the course still requires it | Roadmap v3 item 5 |
+| User notifications in Phase 5 | **v4**; phase2.pdf §6.4 names them as the first thing to cut | Roadmap v4 |
+| The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15, guide step 3 |
+| Mapping file `.doctracker.yml` | `doctracker.yml`, because the hidden-path rule would drop a dot-file | Guide step 4 |
 
-- `POST /analyze` with `{repository: "owner/name", commit_id, base_commit?}` returns an `AnalysisResult` (analysis_id, head/base commit, config_version, tool_version, status, issues[], changes[], skipped[], error, created_at).
-- `GET /analysis/{analysis_id}` returns the saved run file unchanged.
-- Errors: `INVALID_REQUEST`, `REPO_NOT_FOUND`, `REPO_NOT_ACCESSIBLE`, `COMMIT_NOT_FOUND`, `INVALID_CONFIG`, `CHECKS_SKIPPED`, `DETECTOR_ERROR`, `TIMEOUT`, `WRITE_FAILED`.
+## 3. Phase 2's review notes and how they were settled
 
-## 2. Where the repo is today
+phase2.pdf pp. 19–20 lists twelve inconsistencies to fix before the next phase.
 
-| Thing | State |
-|---|---|
-| `Source/GitHub_Connector/gitHook.py` | `monitor()` and `get_diff()` are comments only; file starts with a bare `import`, so it doesn't parse. |
-| `parse.py` | `parse(request)` → `Change_request(file, line_start, line_end)`; imports a module `blank` that doesn't exist. |
-| `store.py` | Commented outline of `Repository` (sleep/revive/load doc). |
-| `Models/` | Schema v14 (the best design doc in the repo) and a webhook architecture sketch. |
-| `migrations/` | An Alembic setup was added then removed in the last commit. |
-| Tests, CI, dependencies file | None yet. |
-| Visibility | The repo is **private**; v1 targets **public** repos, so test repos must be public (or the service needs a token). |
+| # | Note | Settled as |
+|---|---|---|
+| 1 | Fact comparison (REQ-02, §8.1) or co-change (M3)? | From v1.2 the LLM reads the changed code and the docs and judges drift, which is closer to fact comparison. The deterministic rule for the final version is still open. |
+| 2 | Human review mandatory (REQ-03) or selectable (§7.2)? | Mandatory: every finding is `PENDING_REVIEW` (roadmap goal 3). Recording decisions comes in v3. |
+| 3 | Read-only scope, yet the architecture edits docs | Read-only. The tool never edits the repo or its docs (goal 3, REQ-06). |
+| 4 | HTTP 200 with ERROR, or 404 and 500? | 400, 404 or 500 with nothing saved (decision 13). |
+| 5 | Examples use `sample-credit-project` and 6-character SHAs | `owner/name`, 7–40 hex in, 40 hex out, and `config_version` always present ([spec](spec-v1.1.md)). |
+| 6 | Confidence and repeatability | No confidence field (decision 5). v1.1 is exact; from v1.2 `changes[]` stays exact and `issues[]` is checked by shape. |
+| 7 | Is a mapping required, and in what format? | Not before v1.3 or v2. Its name and format are open (roadmap decision 6). |
+| 8 | Reliability measured before the mapping exists | The reliability run moves to v2, on the public test repo (ticket 11). |
+| 9 | Stateless test interface versus per-user storage | The API is stateless; per-user storage is v4. |
+| 10 | How AC-05 reads review decisions back | v3. A small review endpoint agreed with the pod is recommended (roadmap decision 7, open). |
+| 11 | Viewers, notifications and the hosted app versus the narrow scope | Each is labelled with its version in the roadmap. |
+| 12 | "Human review ensures compliance" | The tool supports documentation maintenance; it certifies nothing. |
 
-**Two architectures are in play and they should be reconciled before coding:**
+## 4. The pipeline, version by version
 
-1. **Spec M1 (stateless):** Action → `POST /analyze` → resolve → detect → save run file. No accounts, no stored repos.
-2. **README / `WebHookConnectors.png` / spec §7.3 (stateful):** GitHub App webhooks → queue → workers → database, per-user sign-in, repos "sleep" and "revive".
+| Stage | v1.1 (built) | v1.2 | v1.3 or v2 | Later |
+|---|---|---|---|---|
+| Validate the request | `owner/name` and 7–40 hex, before any git work | — | — | — |
+| Get the repo | Anonymous blobless clone with no checkout, deleted after the run | — | — | REST fallback for hosts without git (v4) |
+| Resolve commits | Full SHAs; base is `base_commit`, else the first parent, else none (first audit) | — | — | — |
+| Changed files | `git diff --raw -M`: renames only, hidden paths, symlinks and submodules ignored | — | — | — |
+| Skipped files | Binary, over 1 MB, not UTF-8 | Docs over the 200 KB doc budget | — | — |
+| Categories | Ordered path rules in `path_rules.json` | — | — | DESIGN, ARCHITECTURE, SPECIFICATION and REQUIREMENT rules, once the pod agrees conventions |
+| Drift | `issues[]` empty | The LLM reads the changed code and every doc at head and fills `issues[]` | The mapping narrows what the LLM reads; the reliability run | Deterministic detection in the final version; section and symbol level (§5) |
+| `config_version` | Hash of the rules file | Plus the LLM provider, model and doc budget | Plus the mapping file at head | — |
+| Save the run | `runs/{analysis_id}.json` on local disk | — | — | Durable store in v3 (an evidence repo through the Contents API) |
+| Callers | The `/system` API and the tests | — | — | The GitHub Action (v3); the webhook (v4) |
+| Review | — | — | — | Review records beside the run file (v3) |
 
-**Recommendation:** build (1) for Phases 3–4. It's what the acceptance tests hit, and it's much smaller. Keep (2) as the Phase 5 "hosted app" layer on top: a webhook simply becomes another caller of the same `analyze()` function. The current stubs (`monitor`, `Repository.sleep/revive`) belong to (2) and can wait.
+## 5. Sectioning, kept for after v2
 
-## 3. The pipeline (M2 states) and the tool for each step
+This is schema v14's model, the "living map" of phase2.pdf §7.2. It stays out until Kaan schedules it.
 
-```
-VALIDATING → RESOLVING → ANALYZING → SAVING → SUCCESS | ERROR | NOT SAVED
-```
+- **Snapshot** of the repo at one commit: a folder tree, doc sections, code symbols and code-to-code dependencies.
+- **DocSection:** one Markdown heading and everything under it, keyed by `doc_path` and `heading_path`, with line spans. Each file also has a whole-file section.
+- **Function and Class:** named code symbols with line spans, from `ast` for Python first and tree-sitter adapters for other languages.
+- **DocLink:** an authored entry in the mapping file tying a section to code selectors such as `src/model/`, `src/model/scoring.py`, `src/model/scoring.py::score` or `src/model/scoring.py::Scorer.score`.
+- **The rule:**
+  - Code has changed when a target's span overlaps a hunk on either side, when it exists at base only, or when something it depends on changed (one hop).
+  - Code changed and doc not → `OUTDATED_DOCUMENTATION`.
+  - Link kept but section gone → `MISSING_DOCUMENTATION`.
+  - Unresolvable selector → skipped as `INVALID_MAPPING`.
+  - Unparsable code → skipped as `PARSE_FAILED`.
 
-| Step | What it does | Recommended tool | Alternatives / notes |
-|---|---|---|---|
-| Validate request | Check `owner/name`, 7–40 hex SHAs; return 400 | **FastAPI + Pydantic v2** (models double as the JSON schema) | Flask + jsonschema. FastAPI also gives free OpenAPI docs for the other team. |
-| Get the repo | Fetch both commits without running anything | **`git` CLI via `subprocess`**: `git clone --filter=blob:none --no-checkout`, `git fetch origin <sha>` | REST `tarball/{sha}` (one call per snapshot) when the host has no git. GitPython / pygit2 add little over the CLI. |
-| Resolve commits | Short → full SHA; default base = first parent | `git rev-parse <sha>^{commit}`, `git rev-parse <sha>^` | REST `GET /repos/{o}/{r}/commits/{ref}` (`parents[0]`), see API notes. |
-| Changed lines | `git diff -U0 base head` → hunks per file, both sides | **git CLI + `unidiff`** (parses hunks, statuses, renames) | REST `compare/{base}...{head}` has `patch`, but caps at 300 files and drops large patches. |
-| Snapshot tree | Folder/File list at each commit | `git ls-tree -r --name-only <sha>` | REST `git/trees/{sha}?recursive=1`. |
-| File content | Read a file at a commit | `git show <sha>:<path>` | REST `contents/{path}?ref=` (raw), or `raw.githubusercontent.com` (no rate limit, public only). |
-| Python symbols | Functions/classes/methods with start (incl. decorators) and end lines | **stdlib `ast`** (`lineno`, `end_lineno`, `decorator_list`); it parses, never executes | **tree-sitter + tree-sitter-python**, which schema v14 names; worth it once a second language is added. |
-| Dependencies (1 hop) | Name-based call/inheritance edges | `ast.walk` over `Call` / `ClassDef.bases` | tree-sitter queries later. |
-| Markdown sections | Heading path, start/end line per section, plus whole-file section | **`markdown-it-py`** (token `.map` gives line ranges, ignores `#` inside code fences) | A 20-line ATX-heading regex is enough if fences are handled. |
-| Mapping file | Authored `DocLink`s read at base and head | **YAML via `PyYAML.safe_load`** at a fixed path, e.g. `.doctracker.yml` | JSON (no dependency). Format and path still need pod agreement (spec review note 7). |
-| Detect (M3) | Overlap hunks with spans, apply the rule table | Plain Python | — |
-| `config_version` | Hash of the mapping file at head | `hashlib.sha256` | — |
-| Save run | `runs/{analysis_id}.json`, written once | Local disk / volume for v1; then commit to a separate **evidence repo** via the GitHub Contents API (M1) | SQLite or S3-style bucket if the host has no persistent disk. |
-| Analysis id | Unique, server-assigned | `uuid4` or ULID (sortable by time) | — |
+Turning it on needs:
+- hunks back (`git diff -U0`)
+- a Markdown sectioner (`markdown-it-py`, or a small heading parser that skips code fences)
+- a symbol extractor
+- a mapping format agreed with the pod
+- a `Finding` extended with section and line detail, which changes the shared contract
 
-### The M3 rule in code terms (symbol level, schema v14)
+The connector's `tree()` and `read()` already give it what it reads from git.
 
-For each `DocLink` in the mapping at head (and base):
+## 6. Safety (REQ-06), as built in v1.1
 
-1. Resolve every selector (`path/`, `path`, `path::name`, `path::Type.method`) against the snapshot. Unresolvable → `SKIPPED · INVALID_MAPPING`. Code file fails to parse → `SKIPPED · PARSE_FAILED`.
-2. **code changed** = a target's span overlaps a hunk (either side), or it exists at base only, or a target it depends on changed (1 hop).
-3. **doc changed** = the section's span overlaps a hunk.
-4. code changed and doc not → `OUTDATED_DOCUMENTATION`. Link kept, section gone, target kept → `MISSING_DOCUMENTATION`. Both changed → no finding in v1.
-5. Every changed file goes into `changes[]` regardless.
+- Nothing from the repo is installed, imported or run. A test plants files that would leave a marker if they ran.
+- The clone is anonymous: `GIT_TERMINAL_PROMPT=0` and an empty credential helper, so a private repo fails at once.
+- Blobless with no checkout: repo files exist only as git objects in a temporary clone, deleted after every run, error or not.
+- Each git call has a 60 s cap and the analysis a 120 s deadline; a git process that overruns is killed with its whole process group.
+- At most two analyses run at once, so two clones fit in Render's free-tier 512 MB.
 
-Sort `issues`, `changes` and `skipped` by path and id before saving, so repeated runs are byte-identical apart from `analysis_id` and `created_at` (AC-10).
+## 7. Tooling, as used
 
-## 4. GitHub side
+- **Tests:** `pytest` with FastAPI's `TestClient` against the real app. Fixture repos are built with git under `tmp_path`, plus the labelled test repo from `tools/testrepo.py`.
+- **CI:** `.github/workflows/ci.yml` on every PR. `acceptance.yml` checks the deployed service on demand.
+- **Hosting:** a Dockerfile with git, deployed to Render's free tier (`render.yaml`) once Kaan approves.
+- **Not added, by choice** (`Skills/CLAUDE.md`, minimal first): `pyproject.toml`, `ruff` and `mypy`.
 
-- *Superseded (2026-10-17) by [guide step 3](github-connector-steps.md) and roadmap v3 item 2: on a PR, head is `pull_request.head.sha`, not `github.sha` (which is GitHub's synthetic merge commit), and base is the merge base.* **Trigger:** a workflow in the analysed repo on `push` and `pull_request`. Base = `github.event.pull_request.base.sha` or `github.event.before`; head = `github.sha`. It `curl`s `POST /analyze` and posts findings as a PR comment or check run using the built-in `GITHUB_TOKEN` (`actions/github-script` or `gh`).
-- **Rate limits:** the git path uses no REST quota. If the REST path is used, unauthenticated is 60 req/h per IP, which runs out fast; a no-scope token gives 5,000/h. Details in the [API notes](/mnt/project-files/github-api/base-head-endpoints.md).
-- **Review (M5, REQ-03):** reviewers confirm/dismiss by replying on the PR comment; the run file stays `PENDING_REVIEW` and decisions are recorded alongside (spec review note 10 asks how AC-05 reads them back; a small `POST /analysis/{id}/review` endpoint is the simplest testable answer).
-- **Phase 5 webhook path:** a GitHub App, HMAC check on `X-Hub-Signature-256`, dedupe on `X-GitHub-Delivery`, a queue (RQ + Redis, or just a DB table), and `smee.io` for local webhook testing.
+## 8. Left out until someone decides otherwise
 
-## 5. Safety (REQ-06)
-
-- Never `pip install`, import, run tests or build in the cloned repo. `ast.parse` and Markdown parsing only read text.
-- Clone into a fresh temp dir per run, `--no-checkout` (read blobs with `git show`), delete it afterwards. Cloned repos carry no hooks.
-- Set `GIT_TERMINAL_PROMPT=0` and a timeout on every git call; cap repo size / file count and return `TIMEOUT` or `CHECKS_SKIPPED` rather than hanging.
-- AC-09 test: hash the fixture repo before and after a run and assert nothing changed.
-
-## 6. Dev tooling
-
-| Need | Tool |
-|---|---|
-| Language / env | Python 3.12, `uv` (or pip + venv), `pyproject.toml` |
-| Tests | `pytest`; FastAPI `TestClient`; fixture repos built in tests with `git init` in `tmp_path` so cases are exact |
-| Lint / types | `ruff` (lint + format), `mypy` (optional) |
-| CI | GitHub Actions running pytest on every PR |
-| Contract testing with the other team | The OpenAPI schema FastAPI emits; optionally `schemathesis` against the deployed URL |
-| Deploy (Phase 5) | Dockerfile with `git` installed; Render / Fly.io / Railway free tier, or a small VM. Needs a persistent volume for `runs/` unless runs go to the evidence repo. |
-| Dev assistants | Claude / Codex offline only (spec §8.2) |
-
-## 7. Suggested build order
-
-Aligned with the spec's milestones. Each step ends in something testable.
-
-**Phase 3: changes and the interface (AC-01, 07, 08, 10)**
-1. `pyproject.toml`, `ruff`, `pytest`, CI workflow.
-2. Pydantic models for `AnalysisRequest`, `AnalysisResult`, `Finding`, `Change`, `Skipped`, `ErrorInfo` (straight from M4).
-3. `GitHub_Connector`: `fetch(repo)`, `resolve(sha)`, `diff(base, head)` → `Change[]` + hunks. This replaces the `get_diff` stub; `monitor` waits for Phase 5.
-4. `POST /analyze` returning `changes[]` only; `GET /analysis/{id}` reading run files.
-5. Error mapping: clone fails → `REPO_NOT_ACCESSIBLE` (404), unknown SHA → `COMMIT_NOT_FOUND` (404), bad body → 400.
-6. A public **test repo** with labelled cases (spec §4.2). Also needed for the Priority 1 risk.
-
-**Phase 4: mapping and detection (AC-02, 03, 10)**
-7. Markdown sectioner and Python symbol extractor → `Snapshot`.
-8. Mapping file loader and selector resolver.
-9. M3 rule → `issues[]` and `skipped[]`. Template explanations.
-10. Reliability run on the test repo (target ≥90% caught, <10% false alerts). If missed, fall back to file-level mapping (spec §9.1).
-
-**Phase 5: hosting and review (AC-04, 05, 06, 09)**
-11. Deploy, evidence repo, Action that comments on PRs, review recording.
-12. Optional: GitHub App + webhooks + queue (the `WebHookConnectors.png` design), sign-in, notifications.
-
-## 8. Decisions needed before coding (from the spec's own review notes)
-
-These change what gets built, so the pod should settle them first:
-
-1. **Fact comparison vs co-change.** REQ-02 says "compare facts"; M3 says "both changed → no warning". Schema v14 already chose co-change at symbol level; narrow REQ-02 to match.
-2. **HTTP status for failed runs.** M2 saves ERROR runs with HTTP 200; §5.1 says 404/500. Suggest: 400/404 when nothing is saved, 200 + `status: ERROR` once a run file exists.
-3. **Confidence.** AC-10 wants confidence within 0.05, but the schema has no field. Either add `confidence` to `Finding` or drop it from AC-10. A rule-based detector can just say 1.0.
-4. **Mapping file format and path** (`.doctracker.yml`?) and whether it's required in test repos.
-5. **Spec examples** use `sample-credit-project` and 6-char SHAs; fix to `owner/name` and 7–40 hex.
-6. **Stateless vs stateful** (section 2 above).
-
-## 9. Deliberately left out (per `Skills/CLAUDE.md`: minimal first)
-
-Not in the minimal v1 above, flagged so it's a conscious choice: languages other than Python, rename following, per-user accounts and storage, the webhook/queue path, notifications, a viewer UI beyond the PR comment, and any runtime LLM.
+Languages other than Python, following renames, private repos with a token, per-user accounts, the webhook and queue path, notifications, and a viewer beyond the v3 minimum.

@@ -43,6 +43,53 @@ def client():
     return TestClient(app)
 
 
+# --- network tests ---------------------------------------------------
+
+
+def pytest_configure(config):
+    # registers the one marker every network test shares
+    config.addinivalue_line("markers", "network: needs GitHub; skipped offline or with DRIFTER_OFFLINE=1")
+
+
+_github: bool | None = None
+
+
+def _github_reachable() -> bool:
+    # checks once per session whether git can reach GitHub anonymously
+    global _github
+    if _github is None:
+        import os
+        import subprocess
+
+        env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+        try:
+            proc = subprocess.run(
+                ["git", "-c", "credential.helper=", "ls-remote", "https://github.com/octocat/Hello-World", "HEAD"],
+                env=env, capture_output=True, timeout=15,
+            )
+            _github = proc.returncode == 0
+        except (OSError, subprocess.TimeoutExpired):
+            _github = False
+    return _github
+
+
+def pytest_collection_modifyitems(config, items):
+    # skips network tests when told to stay offline or when GitHub can't be reached
+    import os
+
+    network = [i for i in items if i.get_closest_marker("network")]
+    if not network:
+        return
+    if os.environ.get("DRIFTER_OFFLINE") == "1":
+        reason = "DRIFTER_OFFLINE=1"
+    elif not _github_reachable():
+        reason = "GitHub is not reachable"
+    else:
+        return
+    for item in network:
+        item.add_marker(pytest.mark.skip(reason=reason))
+
+
 # --- v1 fixtures -----------------------------------------------------
 
 

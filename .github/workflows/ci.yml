@@ -1,0 +1,38 @@
+# runs the whole test suite on every PR, network and conformance tests included
+
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned requirements
+        run: pip install -r requirements.txt
+
+      # wakes the reference service, a sleeping Render instance takes about a minute
+      - name: Warm the reference service
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 20 https://doc-tracker-5t4s.onrender.com/system/health; then
+              echo; echo "reference service is awake"; exit 0
+            fi
+            echo "attempt $i: not awake yet"; sleep 10
+          done
+          echo "::warning::reference service did not answer, its conformance cases will fail"
+
+      - name: Run the tests
+        run: python -m pytest -q

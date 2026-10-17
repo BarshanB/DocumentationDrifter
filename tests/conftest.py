@@ -11,6 +11,8 @@ import pytest
 # matches the layout the deleted Alembic env.py assumed, GitHub_Connector lives under Source
 SOURCE = Path(__file__).resolve().parents[1] / "Source"
 sys.path.insert(0, str(SOURCE))
+# puts tests/ itself on the path, so tests in subfolders can import repos and reference
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 SECRET = "test-secret"
 
@@ -88,6 +90,116 @@ def pytest_collection_modifyitems(config, items):
         return
     for item in network:
         item.add_marker(pytest.mark.skip(reason=reason))
+
+
+# --- project repo visibility and anonymity ---------------------------
+
+# names our own repo, public since 2026-10-17 and maybe private again after deployment
+PROJECT_REPO = "MuhammadSban/DocumentationDrifter"
+
+_visibility: str | None = None
+
+
+def project_visibility() -> str:
+    # asks GitHub once whether our repo is "public" or "private", "unknown" when it can't tell
+    global _visibility
+    if _visibility is None:
+        import httpx
+
+        try:
+            r = httpx.get(f"https://api.github.com/repos/{PROJECT_REPO}", timeout=15)
+            if r.status_code == 404:
+                _visibility = "private"
+            elif r.status_code == 200:
+                _visibility = "private" if r.json().get("private") else "public"
+            else:
+                _visibility = "unknown"
+        except httpx.HTTPError:
+            _visibility = "unknown"
+    return _visibility
+
+
+@pytest.fixture
+def private_project():
+    # skips unless our repo is private, see tests/private_tests/README.md
+    seen = project_visibility()
+    if seen != "private":
+        pytest.skip(f"{PROJECT_REPO} is {seen}, so the private-repo checks don't apply")
+    return PROJECT_REPO
+
+
+@pytest.fixture
+def public_project():
+    # skips unless our repo is public, see tests/public_tests/README.md
+    seen = project_visibility()
+    if seen != "public":
+        pytest.skip(f"{PROJECT_REPO} is {seen}, so the public-repo checks don't apply")
+    return PROJECT_REPO
+
+
+@pytest.fixture
+def recorded_helper(monkeypatch, tmp_path):
+    # installs a credential helper that records any use, through git's environment config
+    log = tmp_path / "helper-used.log"
+    monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
+    monkeypatch.setenv("GIT_CONFIG_KEY_0", "credential.helper")
+    monkeypatch.setenv("GIT_CONFIG_VALUE_0", f"!f() {{ echo used >> '{log.as_posix()}'; }}; f")
+    return log
+
+
+def host_injects_credentials(private_repo: str) -> bool:
+    # tells whether a bare anonymous git can read a private repo, which means a proxy adds credentials
+    import os
+    import subprocess
+
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GIT_CONFIG_NOSYSTEM": "1", "HOME": "/nonexistent"}
+    proc = subprocess.run(
+        ["git", "-c", "credential.helper=", "ls-remote", f"https://github.com/{private_repo}", "HEAD"],
+        env=env, capture_output=True, timeout=30,
+    )
+    return proc.returncode == 0
+
+
+@pytest.fixture
+def anonymous_host(private_project):
+    # skips where credentials are injected outside git, unless CI demands an anonymous host
+    import os
+
+    if host_injects_credentials(private_project):
+        message = (
+            "this host injects GitHub credentials outside git's control, so a private repo "
+            "is readable here; the private-repo check runs in CI or against the deployed service"
+        )
+        if os.environ.get("DRIFTER_REQUIRE_ANONYMOUS") == "1":
+            pytest.fail(message)
+        pytest.skip(message)
+
+
+@pytest.fixture(scope="session")
+def reference_awake():
+    # checks the reference service once per session, warming it with retries only where CI needs it
+    import os
+
+    import reference
+
+    if os.environ.get("DRIFTER_REQUIRE_REFERENCE") == "1":
+        return reference.warm()
+    return reference.reachable()
+
+
+@pytest.fixture
+def live_reference(reference_awake):
+    # hands out the reference URL, skipping offline unless CI demands it
+    import os
+
+    import reference
+
+    if reference_awake:
+        return reference.REFERENCE_URL
+    message = f"reference service {reference.REFERENCE_URL} did not answer"
+    if os.environ.get("DRIFTER_REQUIRE_REFERENCE") == "1":
+        pytest.fail(message)
+    pytest.skip(message)
 
 
 # --- v1 fixtures -----------------------------------------------------

@@ -147,6 +147,22 @@ def api(v1_env):
     return TestClient(app)
 
 
+@pytest.fixture
+def target(api):
+    # talks to the service under test: the in-process app, or a deployed one at DRIFTER_TARGET_URL
+    import os
+
+    url = os.environ.get("DRIFTER_TARGET_URL", "").rstrip("/")
+    if not url:
+        yield api
+        return
+    import httpx
+
+    root = url[: -len("/system")] if url.endswith("/system") else url
+    with httpx.Client(base_url=root, timeout=180) as client:
+        yield client
+
+
 def sign(body: bytes, secret: str = SECRET) -> str:
     # signs a body the way GitHub does
     return "sha256=" + hmac.new(

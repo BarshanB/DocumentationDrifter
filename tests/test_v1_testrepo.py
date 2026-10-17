@@ -46,6 +46,8 @@ def check(api, repository, label, entry):
         return body
     for key in ("head_commit", "base_commit", "changes", "skipped"):
         assert body[key] == expect[key], f"{label}: {key} differs"
+    # fetches the run straight back, before a spin-down can wipe it
+    assert api.get(f"/system/analysis/{body['analysis_id']}").content == r.content, label
     return body
 
 
@@ -92,11 +94,11 @@ def test_mixed_commit_puts_every_path_in_exactly_one_place(local_api, built):
 
 
 @pytest.fixture
-def public_api(api, github_env):
-    # uses the default remote base URL, once the public test repo exists
+def public_api(target, github_env):
+    # reaches the public test repo through GitHub, in-process or at DRIFTER_TARGET_URL
     if not PUBLIC_REPO:
         pytest.skip("DRIFTER_TEST_REPO is not set: the public test repo hasn't been created yet")
-    return api
+    return target
 
 
 @pytest.mark.network

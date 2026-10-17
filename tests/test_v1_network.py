@@ -137,46 +137,73 @@ def test_our_schema_matches_the_live_reference(live_reference):
 # --- conformance -----------------------------------------------------
 
 
-class Ours:
-    # sends requests to the in-process app, or to a deployed URL from DRIFTER_TARGET_URL
-
-    def __init__(self, api):
-        self.url = os.environ.get("DRIFTER_TARGET_URL", "").rstrip("/")
-        self.api = api
-
-    def request(self, method, path, body=None):
-        if self.url:
-            r = httpx.request(method, self.url + path, json=body, timeout=180)
-        else:
-            r = self.api.request(method, "/system" + path, json=body)
-        return r.status_code, r.json()
-
-
 def theirs(method, path, body=None):
     # sends one request to the reference service
     r = httpx.request(method, reference.REFERENCE_URL + path, json=body, timeout=180)
-    return r.status_code, r.json()
+    return r
 
 
+def analyze(body):
+    # spells a POST /analyze case
+    return ("POST", "/analyze", body)
+
+
+HELLO_FULL = "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d"
+
+# the conformance request set: real repos, then every error case (ticket 12)
 CASES = {
-    "hello-world": ("POST", "/analyze", HELLO),
-    "missing-repository": ("POST", "/analyze", {"repository": MISSING_REPO, "commit_id": "a" * 40}),
-    "private-repository": ("POST", "/analyze", {"repository": PRIVATE_REPO, "commit_id": "a" * 40}),
+    "hello-world": analyze(HELLO),
+    "hello-world-explicit-parent": analyze({**HELLO, "base_commit": "553c2077f0edc3d5dc5d17262f6aa498e69d6f8e"}),
+    "hello-world-older-base": analyze({**HELLO, "base_commit": "7629413"}),
+    "psf-requests": analyze({"repository": "psf/requests", "commit_id": "d568f47"}),
+    "missing-commit-id": analyze({"repository": "octocat/Hello-World"}),
+    "malformed-repository": analyze({"repository": "not-a-repo", "commit_id": HELLO_FULL}),
+    "malformed-sha": analyze({"repository": "octocat/Hello-World", "commit_id": "xyz"}),
+    "wrong-json-types": analyze({"repository": 7, "commit_id": HELLO_FULL}),
+    "missing-repository": analyze({"repository": MISSING_REPO, "commit_id": "a" * 40}),
+    "private-repository": analyze({"repository": PRIVATE_REPO, "commit_id": "a" * 40}),
+    "unknown-commit": analyze({"repository": "octocat/Hello-World", "commit_id": "1" * 40}),
+    "unknown-base-commit": analyze({**HELLO, "base_commit": "2" * 40}),
+    "unfetchable-short-sha": analyze({"repository": "octocat/Hello-World", "commit_id": "1234567"}),
+    "unknown-analysis-id": ("GET", "/analysis/an-" + "0" * 32, None),
+    "malformed-analysis-id": ("GET", "/analysis/not-an-id", None),
     "health": ("GET", "/health", None),
 }
 
 
+def label_cases():
+    # adds every test-repo label once the public test repo exists
+    repo = os.environ.get("DRIFTER_TEST_REPO", "")
+    if not repo:
+        return {}
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+    import testrepo
+
+    return {f"label-{name}": ("POST", "/analyze", None) for name in testrepo.LABELS}
+
+
 @pytest.mark.network
-@pytest.mark.parametrize("case", sorted(CASES))
-def test_conformance(case, api, github_env, live_reference, request):
+@pytest.mark.parametrize("case", sorted({**CASES, **label_cases()}))
+def test_conformance(case, target, github_env, live_reference, request):
     if case == "private-repository" and not os.environ.get("DRIFTER_TARGET_URL"):
         request.getfixturevalue("anonymous_host")
-    method, path, body = CASES[case]
-    our_status, our_body = Ours(api).request(method, path, body)
-    their_status, their_body = theirs(method, path, body)
-    assert our_status == their_status, f"{case}: status ours {our_status}, theirs {their_status}"
-    found = reference.differences(reference.normalise(our_body), reference.normalise(their_body))
+    if case.startswith("label-"):
+        built = request.getfixturevalue("built")
+        entry = built[2]["labels"][case[len("label-"):]]
+        method, path, body = "POST", "/analyze", {"repository": os.environ["DRIFTER_TEST_REPO"], **entry["request"]}
+    else:
+        method, path, body = CASES[case]
+    ours = target.request(method, "/system" + path, json=body)
+    their = theirs(method, path, body)
+    assert ours.status_code == their.status_code, f"{case}: status ours {ours.status_code}, theirs {their.status_code}"
+    found = reference.differences(reference.normalise(ours.json()), reference.normalise(their.json()))
     assert found == [], f"{case}:\n" + "\n".join(found)
+    if method == "POST" and ours.status_code == 200:
+        # each service serves back its own POST bytes
+        assert target.get(f"/system/analysis/{ours.json()['analysis_id']}").content == ours.content
+        assert theirs("GET", f"/analysis/{their.json()['analysis_id']}").content == their.content
 
 
 def test_differences_name_the_field_and_allow_only_known_ones():

@@ -2,6 +2,16 @@
 
 A service that looks at what changed between two commits of a public GitHub repo and flags documentation that may now be missing or outdated, for a human to review.
 
+## Where the project is heading
+
+**End product**:
+The finished system that [phase2.pdf](plan/phase2.pdf) describes. Each version takes inspiration from it but may differ from it; the roadmap says which version builds which part.
+_Avoid_: the spec (when only the end product is meant), final version (that is the last version we build, which may differ from the end product)
+
+**Version**:
+One iterative step towards the end product, such as v1.1 or v2, with its scope in the roadmap.
+_Avoid_: phase (the course's Phases 3 to 5 are deadlines, not versions)
+
 ## The other team
 
 **Reference service**:

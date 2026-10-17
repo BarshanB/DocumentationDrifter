@@ -1,6 +1,8 @@
 # DocumentationDrifter: the end product and where each part lands
 
-The Phase 2 spec (`phase2.pdf`, the pod's specification) and schema v14 (`Models/documentation-tracker-schema-v14.pdf`) describe the **end product**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it. The [roadmap](roadmap.md) is the plan to follow; the [decision log](decisions-2026-10-17.md) has the reasons. Terms are as in [CONTEXT.md](../CONTEXT.md).
+The Phase 2 spec ([phase2.pdf](phase2.pdf), the pod's specification) and schema v14 ([pdf](../Models/documentation-tracker-schema-v14.pdf)) describe the **end product**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it.
+
+**Inspiration, not a blueprint.** The versions take ideas from the end product but don't have to match it exactly. Building iteratively means each version can simplify, reorder or drop parts of it as the team learns, and section 2 lists where that has already happened. When a version is meant to build part of the end product, the roadmap names the version (v1.1, v1.2, v2 and so on); anything not named there is not yet planned. The [roadmap](roadmap.md) is the plan to follow; the [decision log](decisions-2026-10-17.md) has the reasons. Terms are as in [CONTEXT.md](../CONTEXT.md).
 
 Revised 2026-10-17 to match the decisions and the v1.1 build. The first version of this file was a snapshot of `main` at `5b74560`.
 

@@ -79,7 +79,7 @@ It exercises exactly what the v3 Action needs (cold-start handling, long timeout
 
 All the merge bases come from one call to GitHub's compare endpoint, `GET /repos/{owner}/{repo}/compare/{base}...{head}`, which returns `merge_base_commit` with the default read token. So the Action needs no `actions/checkout` and no full-history clone.
 
-**Why the new-branch row matters.** The guide (`github-connector-steps.md:68`) and roadmap v3 item 2 (`roadmap.md:168`) say a zero `before` means a first audit. But our contract can't ask for one: leaving out `base_commit` means "first parent", and 40 zeros as `base_commit` would get 404 `COMMIT_NOT_FOUND`. Sending the merge base with the default branch avoids both, and avoids listing the whole repo as ADDED on every new branch. "First audit" then means a root commit only. Those two lines and the comment at `parse.py:41` should say so.
+**Why the new-branch row matters.** (Decided as roadmap decision 15; the graphs and the final reasoning are in [new-branch-base.md](new-branch-base.md).) The guide (`github-connector-steps.md:68`) and roadmap v3 item 2 (`roadmap.md:168`) say a zero `before` means a first audit. But our contract can't ask for one: leaving out `base_commit` means "first parent", and 40 zeros as `base_commit` would get 404 `COMMIT_NOT_FOUND`. Sending the merge base with the default branch avoids both, and avoids listing the whole repo as ADDED on every new branch. "First audit" then means a root commit only. Those two lines and the comment at `parse.py:41` should say so.
 
 **Workflow rules.**
 

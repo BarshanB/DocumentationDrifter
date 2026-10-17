@@ -36,7 +36,7 @@ The commit the head is compared against: `base_commit` if given, otherwise the h
 _Avoid_: parent (when the base was given explicitly)
 
 **First audit**:
-An analysis with no base commit, where every file counts as added. In v1 this happens only when the head is a root commit; a new-branch push sends the merge base with the default branch instead.
+An analysis with no base commit, where every file counts as added. In v1 this happens only when the head is a root commit; a new-branch push sends the merge base with the default branch instead (decision 15, see [plan/new-branch-base.md](plan/new-branch-base.md)).
 _Avoid_: initial scan
 
 ## Parts of the service

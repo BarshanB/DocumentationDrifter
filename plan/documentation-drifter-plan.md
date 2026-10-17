@@ -25,7 +25,7 @@ A read-only service, called by a GitHub Action on every push and pull request, t
 | Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, `WebHookConnectors.png`) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
 | A documentation viewer in Phase 3 (§6.1) | A minimal read-only viewer in **v3**, only if the course still requires it | Roadmap v3 item 5 |
 | User notifications in Phase 5 | **v4**; phase2.pdf §6.4 names them as the first thing to cut | Roadmap v4 |
-| The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15, guide step 3 |
+| The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15 ([graphs](new-branch-base.md)), guide step 3 |
 | Mapping file `.doctracker.yml` | `doctracker.yml`, because the hidden-path rule would drop a dot-file | Guide step 4 |
 
 ## 3. Phase 2's review notes and how they were settled

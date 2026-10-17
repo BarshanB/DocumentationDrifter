@@ -124,7 +124,7 @@ A small FastAPI service under `/system` that matches the reference service's con
   - `config_version` changes when the rules file changes.
 - **Network tests.** These are skipped when offline:
   - One request against a small public repo, for example `octocat/Hello-World` at `7fd1a60`.
-  - The conformance test, which sends the same request set to the reference service and to ours and compares the results with `analysis_id` and `created_at` removed, allowing only the DOCUMENTATION and `config_version` differences.
+  - The conformance test, which sends the same request set to the reference service and to ours and compares the results with `analysis_id`, `created_at` and `tool_version` removed (`tool_version` is a build label; Kaan, 2026-10-17), allowing only the DOCUMENTATION and `config_version` differences.
 - **Prior art.** v0's tests use TestClient against the real app (`tests/test_receiver.py`), and `tests/conftest.py` puts `Source/` on the path and repoints config per test with `monkeypatch`. v1.1 tests follow the same pattern.
 - **Regression.** The v0 suite keeps passing: 18 pass and 1 skips without a `.env`.
 

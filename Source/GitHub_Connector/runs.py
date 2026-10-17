@@ -4,10 +4,14 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 from GitHub_Connector.schemas import AnalysisResult
 from GitHub_Connector.settings import get_settings
+
+# limits lookups to real ids, so a crafted id can never name a file outside the store
+ANALYSIS_ID = re.compile(r"^an-[0-9a-f]{32}\Z")
 
 
 def dump(result: AnalysisResult) -> bytes:
@@ -41,6 +45,8 @@ def save(analysis_id: str, data: bytes) -> None:
 
 
 def load(analysis_id: str) -> bytes | None:
-    # returns a run file's original bytes, None when there is no such run
+    # returns a run file's original bytes, None for an unknown or malformed id
+    if not ANALYSIS_ID.match(analysis_id):
+        return None
     path = _path(analysis_id)
     return path.read_bytes() if path.is_file() else None

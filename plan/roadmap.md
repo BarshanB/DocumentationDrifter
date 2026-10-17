@@ -71,6 +71,8 @@ v0 is the receiver box of `WebHookConnectors.png`, with delivery-id dedupe in SQ
 
 ## v1: change detection API that matches the pod (spec Phase 3)
 
+Every answer from the 2026-10-17 grilling, with its reason, is in the [decision log](decisions-2026-10-17.md).
+
 **Split (Kaan, 2026-10-17).** v1 ships in two steps. **v1.1** is the git change detection below (slices 1–13), with `issues[]` empty. **v1.2** adds an LLM that decides drift and fills `issues[]`. It is probabilistic on purpose for now; determinism comes back in the final version (decision 4).
 
 Neither v1.1 nor v1.2 has a mapping file: the v1.2 LLM reads the changed files and the repo's doc files directly. The mapping file comes in **v1.3** if time allows, otherwise in v2 (Kaan, 2026-10-17).

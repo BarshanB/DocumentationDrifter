@@ -6,7 +6,7 @@ Written 2026-10-16 against `main` @ `76eb691`. Revised the same day after probin
 
 **Working agreement.** Every version is built locally, one small slice at a time. Nothing is pushed or merged until Kaan says so for that push.
 
-**Planning status (2026-10-17).** v1 planning is complete. Every v1 decision is either settled or has a default that stands unless Kaan changes it: Railway hosting (8, moved from Render on 2026-10-17), `.github/` excluded (9), no DESIGN/ARCHITECTURE/SPECIFICATION/REQUIREMENT rules yet (11), lockfiles classified by path until the pod says otherwise (17). The Actions-readiness changes were applied on 2026-10-17 (decisions 14 and 15). The other open rows (5, 6, 7, 10) belong to v2 and v3 and get settled before those versions start. The `/test` semantics are to be confirmed with the pod before v1 slice 13.
+**Planning status (2026-10-17).** v1 planning is complete. Every v1 decision is either settled or has a default that stands unless Kaan changes it: Railway hosting (8, moved from Render on 2026-10-17), `.github/` excluded, confirmed by T12-Q9 (9), no DESIGN/ARCHITECTURE/SPECIFICATION/REQUIREMENT rules yet (11), lockfiles OTHER and skipped as `UNSUPPORTED_FILE_TYPE` (17, settled by T12-Q2). The Actions-readiness changes were applied on 2026-10-17 (decisions 14 and 15). The other open rows (5, 6, 7, 10) belong to v2 and v3 and get settled before those versions start. The `/test` semantics are to be confirmed with the pod before v1 slice 13.
 
 ---
 
@@ -89,6 +89,8 @@ In v1.2, AC-10 and the conformance test still require `changes[]` to match exact
 
 The LLM gets every DOCUMENTATION file at head, up to a 200 KB total (a config value); docs past the cap go to `skipped[]` with an "over doc budget" reason (Kaan, 2026-10-17).
 
+**Open for the v1.2 grilling (T12-Q7).** Since T12-Q2, skip reasons are codes (`UNSUPPORTED_FILE_TYPE`, `BINARY_FILE`, `FILE_TOO_LARGE`, `NOT_UTF8`): should the doc-budget reason become `OVER_DOC_BUDGET` to match?
+
 **Goal.** For any input, our service gives the same answer as the pod's service, apart from `analysis_id` and `created_at`. In v1.1 `issues[]` is empty on purpose; v1.2 fills it from the LLM, and from then on only `changes[]` must match the pod exactly.
 
 **How it's built.** The connector follows [GitHub connector, step by step](github-connector-steps.md) (the "guide") step for step: the git CLI through `subprocess`, the `fetch()` → `Comparison` interface from the [fetcher plan](commit-fetcher-plan.md), dataclasses inside the connector and Pydantic only for the API models. It lives in `Source/GitHub_Connector/` next to the v0 webhook code. Where the guide was written before the pod's service existed, the contract wins; the three places are listed under "Where the guide and the contract differ" below. Each slice is built locally and ends with green tests.
@@ -144,7 +146,7 @@ The guide predates the pod's live service. In these three places v1 follows the 
 
 - AC-01, AC-07, AC-08 and AC-10 (without the confidence clause) pass automatically against our test repo (spec §6.1). AC-06 and AC-09 also pass.
 - All twelve connector tests above pass.
-- The conformance test shows no differences from the pod's service apart from the DOCUMENTATION category and `config_version`.
+- The conformance test shows no differences from the pod's service apart from the DOCUMENTATION category, `config_version`, `tool_version` (T12-Q5) and the named known differences in the decision log.
 - The shared tester's T-01 to T-07 pass.
 - The existing v0 tests still pass (18 pass; the `.env` test skips without a `.env`).
 - No code from the analysed repo is installed, imported or run, and no file from it is written to disk except as git objects in the temporary clone.
@@ -246,7 +248,7 @@ Each of these stays out until Kaan decides to add it (per `Skills/CLAUDE.md`):
 | 6 | Mapping file name and format (also guide open point 2), and whether the pod's `mapping-v1` refers to one. | Use whatever the pod uses. Otherwise `doctracker.yml`, which isn't hidden, so the filter doesn't drop it. Needed only once the mapping lands, in v1.3 or v2 (decision of 2026-10-17). | v1.3 or v2 |
 | 7 | Where reviews live: a review endpoint or PR replies. | A small review endpoint agreed with the pod. It's testable for AC-05. | v3 |
 | 8 | ~~Host~~ | **Decided:** Railway (Kaan, 2026-10-17), replacing Render, whose free tier needs a card on file that wouldn't verify. Railway's Free plan needs no card: 0.5 GB RAM per service after a 30-day, $5 trial, with sleep-when-idle turned on so the monthly usage allowance lasts. In v3, durable runs go to its 0.5 GB volume or to an evidence repo. | v1 slice 11, v3 |
-| 9 | Exclude `.github/` docs such as `CONTRIBUTING.md`? (guide open point 1) | Yes for v1, because they're process docs. The hidden-file rule drops them. | v1 slice 5 |
+| 9 | ~~Exclude `.github/` docs such as `CONTRIBUTING.md`?~~ (guide open point 1) | **Decided:** yes, as every hidden path is ignored (T12-Q9, Kaan, 2026-10-17), even though the reference service lists them; a known difference by choice. | v1 slice 5 |
 | 10 | Diff PRs from the merge base rather than `pull_request.base.sha`? (guide open point 3) | Yes, in the v3 Action, which reads it from the compare endpoint. Agree it with the pod. | v3 |
 | 11 | Path rules for DESIGN, ARCHITECTURE, SPECIFICATION and REQUIREMENT (guide open point 4) | None in v1. Until the pod agrees on conventions such as `docs/design/**`, those files count as DOCUMENTATION under `docs/` or when named `*.md`, `*.rst` or `*.txt`, and as OTHER otherwise. | v1 slice 8 |
 | 12 | ~~`requirements.txt` caught by `*.txt`~~ | **Decided:** `requirements*.txt` → OTHER, ahead of the `*.txt` rule (Kaan, 2026-10-17). | — |
@@ -254,9 +256,9 @@ Each of these stays out until Kaan decides to add it (per `Skills/CLAUDE.md`):
 | 14 | ~~Which v3 trigger: the Action, the webhook, or both?~~ | **Decided:** the Action only, and wiring the webhook moves to v4 (Kaan, 2026-10-17, applying [actions readiness](actions-readiness.md)). Both on `push` would analyse every push twice, and on the free tier the webhook loses deliveries sent while the service sleeps. | — |
 | 15 | ~~What base does a new-branch push send?~~ | **Decided:** the merge base with the default branch (Kaan, 2026-10-17). The contract can't ask for a first audit for a head that isn't a root commit, and a first audit would list the whole repo as ADDED. "First audit" (base `null`) now means a root commit only. Graphs and reasoning: [new-branch-base.md](new-branch-base.md). | — |
 | 16 | ~~Keep hunks in v1?~~ | **Decided:** dropped from v1.1, with no `git diff -U0` and no `unidiff` (Kaan, 2026-10-17). v1.2 may still pass the plain `git diff` text to the LLM. | — |
-| 17 | Lockfiles: M0 says skip them, but M3 classifies them by path (OTHER unless over 1 MB). | Ask the pod what their service does. M3 stands until then. | v1 slice 8 |
+| 17 | ~~Lockfiles~~ | **Decided** by T12-Q2 (Kaan, 2026-10-17): a lockfile is OTHER in `changes[]` and also skipped as `UNSUPPORTED_FILE_TYPE`, as the reference service does. | — |
 | 18 | ~~Detect copies?~~ | **Decided:** renames only, `-M` at git's default 50% similarity, so COPIED never appears (Kaan, 2026-10-17). The conformance test shows whether the pod differs. | — |
-| 19 | ~~Rename across the hidden-path filter?~~ | **Decided:** filter each side separately (Kaan, 2026-10-17). `.github/a.md` → `docs/a.md` is ADDED, and `docs/x.md` → `.archive/x.md` is DELETED. A hidden path never appears, `old_path` included. | — |
+| 19 | ~~Rename across the hidden-path filter?~~ | **Decided:** filter each side separately (Kaan, 2026-10-17, confirmed by T12-Q9). `.github/a.md` → `docs/a.md` is ADDED, and `docs/x.md` → `.archive/x.md` is DELETED. A hidden path never appears, `old_path` included. | — |
 | 20 | ~~Odd base commits?~~ | **Decided:** accept any `base_commit` and diff exactly what was given (Kaan, 2026-10-17). A base equal to the head gives an empty `changes[]` and SUCCESS; a base after the head or from unrelated history gives whatever `git diff base head` says. | — |
 | 21 | ~~Short SHAs outside branches?~~ | **Decided:** a short SHA that can't be fetched (not on any branch or tag) or is ambiguous gives 404 `COMMIT_NOT_FOUND`, with a message asking for the full 40-character SHA (Kaan, 2026-10-17). | — |
 | 22 | ~~Deadline and K?~~ | **Decided:** 120 s overall deadline, 60 s per git call, K = 2 analyses at once, all in config (Kaan, 2026-10-17). | — |

@@ -136,7 +136,7 @@ CASES = {
 
 
 def label_cases():
-    # adds every test-repo label when DRIFTER_LABEL_CONFORMANCE=1, off until the ticket 12 differences are settled
+    # adds every test-repo label when DRIFTER_LABEL_CONFORMANCE=1, off in CI until ticket 12 turns it on
     if os.environ.get("DRIFTER_LABEL_CONFORMANCE") != "1":
         return {}
     return {f"label-{name}": ("POST", "/analyze", None) for name in testrepo.LABELS}
@@ -155,7 +155,7 @@ def test_conformance(case, target, github_env, live_reference, request):
     ours = target.request(method, "/system" + path, json=body)
     their = theirs(method, path, body)
     assert ours.status_code == their.status_code, f"{case}: status ours {ours.status_code}, theirs {their.status_code}"
-    found = reference.differences(reference.normalise(ours.json()), reference.normalise(their.json()))
+    found = reference.differences(*reference.comparable(reference.normalise(ours.json()), reference.normalise(their.json())))
     allowed = reference.KNOWN_CASE_DIFFERENCES.get(case, ("",))[0]
     found = [f for f in found if not (allowed and f.startswith(allowed + ":"))]
     assert found == [], f"{case}: " + " | ".join(found)
@@ -188,3 +188,30 @@ def test_differences_name_the_field_and_allow_only_known_ones():
     assert reference.differences(ours, other) == ["body.changes[0].change_type: ours 'ADDED', theirs 'MODIFIED'"]
     swapped = {"config_version": "x", "changes": [{"path": "d.md", "category": "IMPLEMENTATION", "change_type": "ADDED"}]}
     assert reference.differences(ours, swapped) != []
+
+
+def test_known_differences_by_choice_are_removed_before_comparing():
+    ours = {
+        "changes": [
+            {"path": "docs/a.md", "old_path": None, "change_type": "ADDED", "category": "DOCUMENTATION"},
+            {"path": "docs/x.md", "old_path": None, "change_type": "DELETED", "category": "DOCUMENTATION"},
+            {"path": "huge.txt", "old_path": None, "change_type": "ADDED", "category": "DOCUMENTATION"},
+            {"path": "logo.png", "old_path": None, "change_type": "ADDED", "category": "OTHER"},
+        ],
+        "skipped": [{"path": "huge.txt", "reason": "FILE_TOO_LARGE"}, {"path": "logo.png", "reason": "UNSUPPORTED_FILE_TYPE"}],
+    }
+    theirs = {
+        "changes": [
+            {"path": ".archive/x.md", "old_path": "docs/x.md", "change_type": "RENAMED", "category": "OTHER"},
+            {"path": ".github/ci.yaml", "old_path": None, "change_type": "ADDED", "category": "OTHER"},
+            {"path": "docs/a.md", "old_path": ".github/a.md", "change_type": "RENAMED", "category": "OTHER"},
+            {"path": "huge.txt", "old_path": None, "change_type": "ADDED", "category": "OTHER"},
+            {"path": "logo.png", "old_path": None, "change_type": "ADDED", "category": "OTHER"},
+        ],
+        "skipped": [{"path": ".github/x.png", "reason": "UNSUPPORTED_FILE_TYPE"}, {"path": "logo.png", "reason": "UNSUPPORTED_FILE_TYPE"}],
+    }
+    assert reference.differences(*reference.comparable(ours, theirs)) == []
+    wrong = {**theirs, "changes": [{**c, "change_type": "MODIFIED"} if c["path"] == "logo.png" else c for c in theirs["changes"]]}
+    assert reference.differences(*reference.comparable(ours, wrong)) == [
+        "body.changes[3].change_type: ours 'ADDED', theirs 'MODIFIED'"
+    ]

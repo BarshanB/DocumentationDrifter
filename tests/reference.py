@@ -63,6 +63,39 @@ def normalise(body: Any) -> Any:
     return body
 
 
+# names the skip reasons only our safety net gives, theirs skips by file type alone (decision T12-Q2)
+OUR_EXTRA_SKIP_REASONS = {"BINARY_FILE", "FILE_TOO_LARGE", "NOT_UTF8"}
+
+
+def _hidden(path: str | None) -> bool:
+    # tells a hidden path, any segment starting with a dot
+    return path is not None and any(part.startswith(".") for part in path.split("/"))
+
+
+def _without_hidden(change: dict) -> dict | None:
+    # rewrites one of their changes the way ours reports it with hidden paths ignored (decision T12-Q9)
+    new, old = _hidden(change["path"]), _hidden(change.get("old_path"))
+    if change["change_type"] != "RENAMED":
+        return None if new else change
+    if new and old:
+        return None
+    if old:
+        return {**change, "change_type": "ADDED", "old_path": None}
+    if new:
+        return {**change, "path": change["old_path"], "change_type": "DELETED", "old_path": None}
+    return change
+
+
+def comparable(ours: Any, theirs: Any) -> tuple[Any, Any]:
+    # removes the known differences by choice: our extra skip reasons and their hidden paths
+    if not (isinstance(ours, dict) and isinstance(theirs, dict) and "changes" in theirs):
+        return ours, theirs
+    ours = {**ours, "skipped": [s for s in ours.get("skipped", []) if s["reason"] not in OUR_EXTRA_SKIP_REASONS]}
+    changes = [c for c in map(_without_hidden, theirs["changes"]) if c is not None]
+    skipped = [s for s in theirs.get("skipped", []) if not _hidden(s["path"])]
+    return ours, {**theirs, "changes": sorted(changes, key=lambda c: c["path"]), "skipped": skipped}
+
+
 def differences(ours: Any, theirs: Any, where: str = "body") -> list[str]:
     # lists every difference that is not a known one, each naming the field
     if isinstance(ours, dict) and isinstance(theirs, dict):

@@ -9,5 +9,6 @@
     {"pattern": "tests/**", "category": "IMPLEMENTATION"},
     {"pattern": "*.py", "category": "IMPLEMENTATION"}
   ],
-  "fallback": "OTHER"
+  "fallback": "OTHER",
+  "unsupported": [".ai", ".html", ".lock", ".png", ".svg"]
 }

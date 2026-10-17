@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from GitHub_Connector import rules
 from GitHub_Connector.schemas import AnalysisError, ChangeType, ErrorCode
 from GitHub_Connector.settings import get_settings
 
@@ -29,10 +30,11 @@ _STATUS = {
 # keeps plain and executable files, drops symlinks (120000) and submodules (160000)
 REGULAR = {"100644", "100755"}
 
-# words each skip reason as a short fixed string
-SKIP_BINARY = "binary file"
-SKIP_TOO_LARGE = "file larger than 1 MB"
-SKIP_NOT_UTF8 = "not valid UTF-8"
+# names each skip reason as a code, in the reference service's style (decision T12-Q2)
+SKIP_UNSUPPORTED = "UNSUPPORTED_FILE_TYPE"
+SKIP_BINARY = "BINARY_FILE"
+SKIP_TOO_LARGE = "FILE_TOO_LARGE"
+SKIP_NOT_UTF8 = "NOT_UTF8"
 
 
 @dataclass(frozen=True)
@@ -46,7 +48,7 @@ class FileChange:
 
 @dataclass(frozen=True)
 class SkippedFile:
-    # names a changed path that could not be checked, with a short fixed reason
+    # names a changed path that could not be checked, with a reason code
     path: str
     reason: str
 
@@ -206,7 +208,8 @@ def fetch(
         cmp = Comparison(repo=repo, head=head_sha, base=base_sha, _git=git)
         # compares a first audit against the empty tree, so every file counts as added
         old = base_sha if base_sha is not None else git.out("hash-object", "-t", "tree", "--stdin")
-        cmp.changes, cmp.skipped = _sort_out(git, old, head_sha, _diff(git, old, head_sha))
+        cmp.changes = _diff(git, old, head_sha)
+        cmp.skipped = _skipped(git, old, head_sha, cmp.changes)
         yield cmp
     finally:
         _rmtree(workdir)
@@ -298,35 +301,32 @@ def _diff(git: _Git, old: str, head: str) -> list[FileChange]:
     return changes
 
 
-def _sort_out(
-    git: _Git, old: str, head: str, changes: list[FileChange]
-) -> tuple[list[FileChange], list[SkippedFile]]:
-    # moves changes that can't be read as text into skipped files, each with a reason
-    if not changes:
-        return [], []
+def _skipped(git: _Git, old: str, head: str, changes: list[FileChange]) -> list[SkippedFile]:
+    # lists the changes that can't be read as text, file type first, then binary, size and UTF-8
+    skipped = [SkippedFile(c.path, SKIP_UNSUPPORTED) for c in changes if rules.is_unsupported(c.path)]
+    rest = [c for c in changes if not rules.is_unsupported(c.path)]
+    if not rest:
+        return skipped
     binary = _numstat_binaries(git, old, head)
-    sizes = _sizes(git, [c.blob for c in changes])
+    sizes = _sizes(git, [c.blob for c in rest])
     cap = get_settings().max_file_bytes
-    reasons: dict[str, str] = {}
     to_read: list[FileChange] = []
-    for c in changes:
+    for c in rest:
         if c.path in binary:
-            reasons[c.path] = SKIP_BINARY
+            skipped.append(SkippedFile(c.path, SKIP_BINARY))
         elif sizes[c.blob] > cap:
-            reasons[c.path] = SKIP_TOO_LARGE
+            skipped.append(SkippedFile(c.path, SKIP_TOO_LARGE))
         else:
             to_read.append(c)
     for c, data in zip(to_read, _contents(git, [c.blob for c in to_read])):
         if b"\0" in data[:8000]:
-            reasons[c.path] = SKIP_BINARY
+            skipped.append(SkippedFile(c.path, SKIP_BINARY))
         else:
             try:
                 data.decode("utf-8")
             except UnicodeDecodeError:
-                reasons[c.path] = SKIP_NOT_UTF8
-    kept_changes = [c for c in changes if c.path not in reasons]
-    skipped = [SkippedFile(path, reason) for path, reason in reasons.items()]
-    return kept_changes, skipped
+                skipped.append(SkippedFile(c.path, SKIP_NOT_UTF8))
+    return skipped
 
 
 def _numstat_binaries(git: _Git, old: str, head: str) -> set[str]:

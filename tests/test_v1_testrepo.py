@@ -62,7 +62,7 @@ def test_mixed_commit_repeats_identically(local_api, built):
     assert strip[0] == strip[1] == strip[2]
 
 
-def test_mixed_commit_puts_every_path_in_exactly_one_place(local_api, built):
+def test_mixed_commit_reports_every_path_not_ignored(local_api, built):
     _, bare, manifest = built
     entry = manifest["labels"]["mixed"]
     body = check(local_api, LOCAL_NAME, "mixed", entry)
@@ -74,12 +74,11 @@ def test_mixed_commit_puts_every_path_in_exactly_one_place(local_api, built):
     touched = {raw[i + 1]: raw[i] for i in range(0, len(raw) - 1, 2)}
     reported = {c["path"] for c in body["changes"]} | {c["old_path"] for c in body["changes"] if c["old_path"]}
     skipped = {s["path"] for s in body["skipped"]}
-    assert not reported & skipped
+    assert skipped <= reported, "every skipped file is also a change"
     for path, meta in touched.items():
         old_mode, new_mode = meta[1:].split(" ")[:2]
         ignored = any(p.startswith(".") for p in path.split("/")) or {old_mode, new_mode} & {"120000", "160000"}
-        places = [bool(ignored), path in skipped, path in reported]
-        assert places.count(True) == 1, f"{path} is in {places} (ignored, skipped, changes)"
+        assert bool(ignored) != (path in reported), f"{path}: ignored={bool(ignored)}, reported={path in reported}"
     assert ".assets/secret.png" in touched and ".assets/secret.png" not in reported | skipped
 
 

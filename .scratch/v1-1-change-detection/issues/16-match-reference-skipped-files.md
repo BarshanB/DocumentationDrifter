@@ -1,0 +1,17 @@
+# 16: Match the reference on skipped files
+
+**What to build:** A caller gets the same `changes[]` and `skipped[]` as the reference service for commits with unreadable files. A skipped file is still reported in `changes[]` with its change type and category, and is also listed in `skipped[]`. Skipping checks file type first: an extension denylist in the rules file gives `UNSUPPORTED_FILE_TYPE`. The content checks follow as a safety net, with reason codes instead of sentences. Hidden paths stay ignored, as before (T12-Q3, reversed by T12-Q8): they appear in neither list.
+
+**Blocked by:** None (can start immediately)
+
+**Status:** built on 2026-10-17, except the republish and the live label run. The connector keeps skipped files in changes[] and checks the denylist in `path_rules.json` (`unsupported`) before the content checks. `tests/reference.py` `comparable()` removes the two known differences by choice before comparing, precisely rather than by whole field: our extra skip reasons (`BINARY_FILE`, `FILE_TOO_LARGE`, `NOT_UTF8`) and their hidden paths, with renames across a hidden path rewritten as ours reports them. Suite: 226 passed offline and online on Python 3.12; the three reference-service tests were skipped because the reference service didn't answer from the build machine. `git diff --numstat` still fetches every changed blob, denylisted ones included; only the reason order follows the denylist. Decided Split out of ticket 12 because it needs more than a small fix (T12-Q6).
+
+**Spec:** docs/plan/spec-v1.1.md, user stories 32, 33 (as amended by T12-Q1 and T12-Q2)
+
+- [x] Every changed path that isn't a symlink or submodule is in `changes[]`. A skipped one is also in `skipped[]`, so a changed PNG appears in both.
+- [x] The rules file holds an extension denylist (`.lock`, `.png`, `.svg`, `.ai`, `.html`), and a change to it changes `config_version`. A denylisted file is skipped with `UNSUPPORTED_FILE_TYPE` before any content check, so a 2 MB `.ai` file gets that code and not a size code.
+- [x] Files of other types that are binary, over the size limit or not UTF-8 are skipped with `BINARY_FILE`, `FILE_TOO_LARGE` or `NOT_UTF8`. No reason names the size limit.
+- [x] A lockfile such as `Pipfile.lock` is OTHER in `changes[]` and skipped as `UNSUPPORTED_FILE_TYPE` (roadmap decision 17).
+- [ ] The test repo's expected answers are updated (`binary`, `oversize`, `non-utf8`, and any combined label they feed; the hidden-path labels keep their answers), and the public copy is republished. (Expected answers updated in `tools/testrepo.py`; Kaan republishes with `python tools/testrepo.py <folder>` and a force-push. The fixture commits keep their SHAs, only the manifest commit changes.)
+- [ ] With DRIFTER_LABEL_CONFORMANCE=1, the label cases match the reference service except three groups of labels recorded as known differences: `oversize` and `non-utf8`, resting on REQ-05 (T12-Q2), and `hidden-paths` and `renames-across-hidden`, by Kaan's choice (T12-Q8). (Recorded in `tests/reference.py` `comparable()`, with an offline test; the live run waits for the reference service.)
+- [ ] M3's diagram and the connector tests in `test_v1_changes.py` and `test_v1_skipped.py` match the new rules, and the whole suite is green offline and online.

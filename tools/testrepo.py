@@ -84,7 +84,7 @@ def skip(path, reason):
     return {"path": path, "reason": reason}
 
 
-BINARY, TOO_LARGE, NOT_UTF8 = "binary file", "file larger than 1 MB", "not valid UTF-8"
+UNSUPPORTED, BINARY, TOO_LARGE, NOT_UTF8 = "UNSUPPORTED_FILE_TYPE", "BINARY_FILE", "FILE_TOO_LARGE", "NOT_UTF8"
 
 # maps each label to (head, base or None, changes, skipped), written by hand to check intent
 EXPECTED = {
@@ -116,9 +116,9 @@ EXPECTED = {
     # follows M3 until ticket 12 probes the reference service
     "symlink-to-file": ("symlink-to-file", None, [change("switchy.txt", "TYPE_CHANGED", "DOCUMENTATION")], []),
     "submodule": ("submodule", None, [change("vendor/README.md", "ADDED", "DOCUMENTATION")], []),
-    "binary": ("binary", None, [], [skip("assets/logo.png", BINARY)]),
-    "oversize": ("oversize", None, [], [skip("data/big.csv", TOO_LARGE)]),
-    "non-utf8": ("non-utf8", None, [], [skip("docs/latin1.txt", NOT_UTF8)]),
+    "binary": ("binary", None, [change("assets/logo.png", "ADDED", "OTHER")], [skip("assets/logo.png", UNSUPPORTED)]),
+    "oversize": ("oversize", None, [change("data/big.csv", "ADDED", "OTHER")], [skip("data/big.csv", TOO_LARGE)]),
+    "non-utf8": ("non-utf8", None, [change("docs/latin1.txt", "ADDED", "DOCUMENTATION")], [skip("docs/latin1.txt", NOT_UTF8)]),
     "requirements-file": ("requirements-file", None, [
         change("docs/requirements.txt", "ADDED", "OTHER"),
         change("requirements-dev.txt", "ADDED", "OTHER"),
@@ -126,16 +126,19 @@ EXPECTED = {
     "lockfile": ("lockfile", None, [
         change("package-lock.json", "ADDED", "OTHER"),
         change("poetry.lock", "ADDED", "OTHER"),
-    ], []),
+    ], [skip("poetry.lock", UNSUPPORTED)]),
     "many-files": ("many-files", None, [change(f"bulk/f{i:03d}.txt", "ADDED", "DOCUMENTATION") for i in range(301)], []),
     "mixed": ("mixed", None, [
+        change("assets/icon.png", "ADDED", "OTHER"),
+        change("data/huge.txt", "ADDED", "DOCUMENTATION"),
         change("docs/guide.md", "ADDED", "DOCUMENTATION"),
         change("lib/shown.py", "RENAMED", "IMPLEMENTATION", "lib/visible.py"),
+        change("misc/latin.txt", "ADDED", "DOCUMENTATION"),
         change("requirements-dev.txt", "DELETED", "OTHER"),
         change("run.sh", "ADDED", "OTHER"),
         change("src/app.py", "MODIFIED", "IMPLEMENTATION"),
     ], [
-        skip("assets/icon.png", BINARY),
+        skip("assets/icon.png", UNSUPPORTED),
         skip("data/huge.txt", TOO_LARGE),
         skip("misc/latin.txt", NOT_UTF8),
     ]),

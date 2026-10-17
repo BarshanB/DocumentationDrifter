@@ -1,0 +1,17 @@
+# 11: Public test repo with labelled cases
+
+**What to build:** Teammates, the acceptance workflow and v2's reliability run share one public test repo. Its labelled commits cover the cases v1.1 must handle, each with its expected result. Every label runs through our /system API both offline, against a locally built copy with the same SHAs, and online, against the public repo.
+
+**Blocked by:** 04 (Commit resolution: short SHAs, commits off every branch, odd bases and first audits); 05 (Change types and ignored paths); 06 (Skipped files: binary, oversize and not UTF-8); 07 (Categories from the ordered path rules); 09 (GitHub and the reference service: network smoke test, anonymous not-found, and the conformance harness)
+
+**Status:** built and passing offline; publishing waits for Kaan. `python tools/testrepo.py <folder>` writes the bare repo (main at d0d50c5 every time). Once Kaan approves creating the public repo, push it with `git push --mirror` and set DRIFTER_TEST_REPO=owner/name for the online run. Open point: the T-01, T-02, T-06 and T-07 labels are inferred from the roadmap, because M0-build-order.pdf (now in plan/) lists T-01, T-02, T-03, T-06 and T-07 together under "get the diff" without defining each one. They're marked with "?" in the manifest's `covers` until someone checks them against M0.
+
+**Spec:** plan/spec-v1.1.md, user stories 25, 32, 34, 35, 58
+
+- [x] A builder creates the test repo deterministically, with fixed identities and dates, so building it twice gives the same commit SHAs.
+- [x] Labelled commits cover T-01 to T-07 as M0 defines them, plus AC-01, AC-08 and AC-10. They also cover these cases: one modified file; an added and a deleted file; a rename; a docs file under docs; a root commit; a base equal to the head; a short SHA; hidden paths and renames across them; a symlink; a file switching to and from a symlink; a submodule; a binary file; an oversize file; a non-UTF-8 file; a requirements file; a lockfile; and 301 or more changed files.
+- [x] One mixed commit touches every kind of path. It shows that each changed path ends up in exactly one place (ignored, in skipped[] or in changes[]), that a hidden binary is in neither list, and that no ignored path appears anywhere, old_path included.
+- [x] A manifest in the test repo lists each label with its full head and base SHAs and either its expected changes[] and skipped[] or its expected error, using glossary terms. The format leaves room for planted-drift labels in v1.2 and v2.
+- [x] In the normal suite, every label runs through the API against the locally built copy, reached through the remote base URL, and gets its manifest result. Three identical requests on the mixed commit differ only in analysis_id and created_at.
+- [ ] Once Kaan approves creating it, the test repo is public and readable anonymously. A network test, skipped offline, runs every label against it through the default remote base URL and gets the same results.
+- [x] The whole suite is green both offline and online, v0 included.

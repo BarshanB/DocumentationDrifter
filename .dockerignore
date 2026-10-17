@@ -1,0 +1,15 @@
+# keeps secrets, history and local state out of the image
+.git
+.env
+*.pem
+secrets/
+*.db
+runs/
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+tests/
+plan/
+Models/
+.scratch/

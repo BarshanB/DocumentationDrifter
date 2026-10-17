@@ -1,0 +1,13 @@
+{
+  "rules": [
+    {"pattern": "requirements*.txt", "category": "OTHER"},
+    {"pattern": "docs/**", "category": "DOCUMENTATION"},
+    {"pattern": "*.md", "category": "DOCUMENTATION"},
+    {"pattern": "*.rst", "category": "DOCUMENTATION"},
+    {"pattern": "*.txt", "category": "DOCUMENTATION"},
+    {"pattern": "src/**", "category": "IMPLEMENTATION"},
+    {"pattern": "tests/**", "category": "IMPLEMENTATION"},
+    {"pattern": "*.py", "category": "IMPLEMENTATION"}
+  ],
+  "fallback": "OTHER"
+}

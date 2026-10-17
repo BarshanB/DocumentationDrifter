@@ -1,0 +1,50 @@
+# runs the whole test suite on every PR, network and conformance tests included
+
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # keeps the job token out of git, so the private-repo check really is anonymous
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pinned requirements
+        run: pip install -r requirements.txt
+
+      # wakes the reference service, a sleeping Render instance takes about a minute
+      - name: Warm the reference service
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsS --max-time 20 https://doc-tracker-5t4s.onrender.com/system/health; then
+              echo; echo "reference service is awake"; exit 0
+            fi
+            echo "attempt $i: not awake yet"; sleep 10
+          done
+          echo "::warning::reference service did not answer, its conformance cases will fail"
+
+      - name: Run the tests
+        env:
+          # turns the network tests' offline skips into failures here
+          DRIFTER_REQUIRE_REFERENCE: "1"
+          DRIFTER_REQUIRE_ANONYMOUS: "1"
+        # turns each failing test into an annotation, readable without opening the log
+        run: |
+          python -m pytest -q -rfE > pytest.log 2>&1 || status=$?
+          cat pytest.log
+          grep -E '^(FAILED|ERROR) ' pytest.log | while read -r line; do echo "::error title=pytest::$line"; done || true
+          exit ${status:-0}

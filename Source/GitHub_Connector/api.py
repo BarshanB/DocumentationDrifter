@@ -33,7 +33,7 @@ _ERRORS = {400: {"model": ErrorBody}, 404: {"model": ErrorBody}, 500: {"model": 
 app = FastAPI(
     title="DocumentationDrifter",
     openapi_url="/system/openapi.json",
-    docs_url="/system/docs",
+    docs_url=None,  # serves only the contract's routes, no docs pages
     redoc_url=None,
 )
 router = APIRouter(prefix="/system")

@@ -84,3 +84,5 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 
 - **Lockfiles (roadmap decision 17):** how they are classified depends on what the reference service does.
 - **`/test` endpoints:** their exact semantics are to be confirmed with the pod before v1 slice 13.
+- **Unexpected git failures:** a git call that fails in a way the connector doesn't foresee (not a timeout, a missing repository or an unknown commit) returns FastAPI's plain-text 500 instead of an `ErrorBody`, and none of the five contract codes fits. Ask the pod what code their service uses, and settle it in ticket 12 (Kaan, 2026-10-17).
+- **Repository pattern:** [M0](M0-build-order.pdf) uses `^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[\w.-]{1,100}$`, stricter than the spec's `^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$`. The spec's pattern stays until the conformance run shows what the reference service accepts (Kaan, 2026-10-17).

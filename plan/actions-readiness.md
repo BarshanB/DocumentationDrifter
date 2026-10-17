@@ -188,7 +188,7 @@ Kaan chose "Apply all" on 2026-10-17, so items 1 to 3 are now in the roadmap, th
 ## Sources
 
 - **Code:** `Source/GitHub_Connector/*.py` and `tests/*.py` at `76eb691`. Test run: `python3 -m pytest -q` gave 18 passed and 1 skipped.
-- **Spec:** phase2.pdf §5.3 (p.12), §6.1 (p.12), §6.3 (p.13), §7.3 (p.15), §8.1–8.2 (p.16) and review notes 9–11 (p.19–20). Also M0-build-order.pdf.
+- **Spec:** phase2.pdf §5.3 (p.12), §6.1 (p.12), §6.3 (p.13), §7.3 (p.15), §8.1–8.2 (p.16) and review notes 9–11 (p.19–20). Also [M0-build-order.pdf](M0-build-order.pdf).
 - **GitHub docs:**
   - Events that trigger workflows (pull_request `GITHUB_SHA` is the merge commit, the default activity types, read-only token on fork PRs).
   - Securely using pull_request_target.

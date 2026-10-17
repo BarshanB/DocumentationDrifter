@@ -169,3 +169,8 @@ def test_analyze_works_without_http(api, make_repo):
     direct = analyze(AnalysisRequest(repository="octo/demo", commit_id=head))
     over_http = analyse(api, head).json()
     assert strip(json.loads(direct.model_dump_json())) == strip(over_http)
+
+
+def test_only_the_contract_routes_are_served(api):
+    for path in ("/system/docs", "/docs", "/redoc", "/system/redoc"):
+        assert api.get(path).status_code == 404, path

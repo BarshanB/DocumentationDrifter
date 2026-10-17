@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 (Commit resolution: short SHAs, commits off every branch, odd bases and first audits); 05 (Change types and ignored paths); 06 (Skipped files: binary, oversize and not UTF-8); 07 (Categories from the ordered path rules); 09 (GitHub and the reference service: network smoke test, anonymous not-found, and the conformance harness)
 
-**Status:** built and passing offline; publishing waits for Kaan. `python tools/testrepo.py <folder>` writes the bare repo (main at d0d50c5 every time). Once Kaan approves creating the public repo, push it with `git push --mirror` and set DRIFTER_TEST_REPO=owner/name for the online run. Open point: the T-01, T-02, T-06 and T-07 labels are inferred from the roadmap, because M0-build-order.pdf isn't in the repo. They're marked with "?" in the manifest's `covers` until someone checks them against M0.
+**Status:** built and passing offline; publishing waits for Kaan. `python tools/testrepo.py <folder>` writes the bare repo (main at d0d50c5 every time). Once Kaan approves creating the public repo, push it with `git push --mirror` and set DRIFTER_TEST_REPO=owner/name for the online run. Open point: the T-01, T-02, T-06 and T-07 labels are inferred from the roadmap, because M0-build-order.pdf (now in plan/) lists T-01, T-02, T-03, T-06 and T-07 together under "get the diff" without defining each one. They're marked with "?" in the manifest's `covers` until someone checks them against M0.
 
 **Spec:** plan/spec-v1.1.md, user stories 25, 32, 34, 35, 58
 

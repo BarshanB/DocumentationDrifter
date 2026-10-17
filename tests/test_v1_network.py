@@ -17,16 +17,6 @@ HELLO = {"repository": "octocat/Hello-World", "commit_id": "7fd1a60"}
 
 
 @pytest.fixture
-def github_env(monkeypatch, v1_env):
-    # keeps runs and clones under tmp_path but uses the default remote base URL (GitHub)
-    monkeypatch.delenv("DRIFTER_REMOTE_BASE_URL")
-    from GitHub_Connector.settings import get_settings
-
-    get_settings.cache_clear()
-    return v1_env
-
-
-@pytest.fixture
 def recorded_helper(monkeypatch, tmp_path):
     # installs a credential helper that records any use, through git's environment config
     log = tmp_path / "helper-used.log"

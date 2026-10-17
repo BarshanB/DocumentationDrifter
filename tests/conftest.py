@@ -128,6 +128,16 @@ def make_repo(v1_env):
 
 
 @pytest.fixture
+def github_env(monkeypatch, v1_env):
+    # keeps runs and clones under tmp_path but uses the default remote base URL (GitHub)
+    monkeypatch.delenv("DRIFTER_REMOTE_BASE_URL")
+    from GitHub_Connector.settings import get_settings
+
+    get_settings.cache_clear()
+    return v1_env
+
+
+@pytest.fixture
 def api(v1_env):
     # builds a test client against the v1 app, named apart from v0's client
     from fastapi.testclient import TestClient

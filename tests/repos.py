@@ -47,23 +47,46 @@ class FixtureRepo:
         git("remote", "add", "origin", str(self.bare), cwd=self.work)
         self._tick = 0
 
-    def commit(self, files: dict[str, bytes | str | None], message: str = "change", push: bool = True) -> str:
-        # writes files (None deletes), commits everything and pushes, returns the full SHA
+    def commit(
+        self,
+        files: dict[str, bytes | str | None],
+        message: str = "change",
+        push: bool = True,
+        symlinks: dict[str, str] | None = None,
+        executable: tuple[str, ...] = (),
+        gitlinks: dict[str, str] | None = None,
+    ) -> str:
+        # writes files (None deletes), links and submodule entries, commits and pushes, returns the SHA
         for rel, content in files.items():
             path = self.work / rel
             if content is None:
                 path.unlink()
                 continue
+            if path.is_symlink():
+                path.unlink()
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content.encode() if isinstance(content, str) else content)
-        return self._commit(message, push)
+        for rel, target in (symlinks or {}).items():
+            path = self.work / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            if path.exists() or path.is_symlink():
+                path.unlink()
+            path.symlink_to(target)
+        return self._commit(message, push, executable, gitlinks or {})
 
-    def _commit(self, message: str, push: bool) -> str:
+    def _commit(self, message: str, push: bool, executable=(), gitlinks=None) -> str:
         # commits the working copy with a fresh date, so every commit gets its own SHA
         self._tick += 1
-        date = f"2026-01-01T00:{self._tick // 60:02d}:{self._tick % 60:02d}Z"
+        date = f"2026-01-01T{self._tick // 3600:02d}:{self._tick // 60 % 60:02d}:{self._tick % 60:02d}Z"
         env = {**os.environ, **GIT_ENV, "GIT_AUTHOR_DATE": date, "GIT_COMMITTER_DATE": date}
         subprocess.run(["git", "add", "-A"], cwd=self.work, env=env, check=True)
+        for rel in executable:
+            subprocess.run(["git", "update-index", "--chmod=+x", rel], cwd=self.work, env=env, check=True)
+        for rel, sha in (gitlinks or {}).items():
+            subprocess.run(
+                ["git", "update-index", "--add", "--cacheinfo", f"160000,{sha},{rel}"],
+                cwd=self.work, env=env, check=True,
+            )
         subprocess.run(
             ["git", "commit", "--quiet", "--allow-empty", "-m", message],
             cwd=self.work, env=env, check=True, capture_output=True,

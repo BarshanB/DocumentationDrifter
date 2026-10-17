@@ -25,6 +25,9 @@ _STATUS = {
     "T": ChangeType.TYPE_CHANGED,
 }
 
+# keeps plain and executable files, drops symlinks (120000) and submodules (160000)
+REGULAR = {"100644", "100755"}
+
 
 @dataclass(frozen=True)
 class FileChange:
@@ -42,6 +45,20 @@ class Comparison:
     base: str | None
     changes: list[FileChange] = field(default_factory=list)
     _git: _Git | None = None
+
+    def tree(self, side: str) -> list[str]:
+        # lists the kept files at "base" or "head", without -l so no blob is fetched
+        sha = self.head if side == "head" else self.base
+        if sha is None:
+            return []
+        raw = self._git.run("ls-tree", "-r", "-z", "--full-tree", sha).stdout
+        paths = []
+        for entry in raw.decode("utf-8", "surrogateescape").split("\0"):
+            if entry:
+                meta, path = entry.split("\t", 1)
+                if kept(path, meta.split(" ")[0]):
+                    paths.append(path)
+        return sorted(paths)
 
 
 class _Git:
@@ -165,21 +182,38 @@ def _first_parent(git: _Git, head: str) -> str | None:
     return proc.stdout.decode().strip() if proc.returncode == 0 else None
 
 
+def kept(path: str, mode: str) -> bool:
+    # admits a regular file with no hidden segment, everything else is an ignored path
+    return mode in REGULAR and not any(part.startswith(".") for part in path.split("/"))
+
+
 def _diff(git: _Git, base: str | None, head: str) -> list[FileChange]:
     # lists changed paths between base and head, renames only, never copies
     # compares a first audit against the empty tree, so every file counts as added
     old = base if base is not None else git.out("hash-object", "-t", "tree", "--stdin")
-    raw = git.run("diff", "--name-status", "-z", "-M", "--no-ext-diff", old, head).stdout
+    raw = git.run("diff", "--raw", "-z", "-M", "--no-abbrev", "--no-ext-diff", old, head).stdout
     fields = raw.decode("utf-8", "surrogateescape").split("\0")
     changes: list[FileChange] = []
     i = 0
     while i < len(fields) and fields[i]:
-        letter = fields[i][0]
+        # reads ":oldmode newmode oldsha newsha status" then one or two paths
+        old_mode, new_mode, _, _, status = fields[i][1:].split(" ")
+        letter = status[0]
         if letter == "R":
-            old, new = fields[i + 1], fields[i + 2]
-            changes.append(FileChange(new, ChangeType.RENAMED, old))
+            old_path, new_path = fields[i + 1], fields[i + 2]
             i += 3
-        else:
-            changes.append(FileChange(fields[i + 1], _STATUS[letter]))
-            i += 2
+            # checks each side on its own, so an ignored path never shows, not even as old_path
+            old_ok, new_ok = kept(old_path, old_mode), kept(new_path, new_mode)
+            if old_ok and new_ok:
+                changes.append(FileChange(new_path, ChangeType.RENAMED, old_path))
+            elif new_ok:
+                changes.append(FileChange(new_path, ChangeType.ADDED))
+            elif old_ok:
+                changes.append(FileChange(old_path, ChangeType.DELETED))
+            continue
+        path = fields[i + 1]
+        i += 2
+        # judges the head side, or the base side for a deletion
+        if kept(path, old_mode if letter == "D" else new_mode):
+            changes.append(FileChange(path, _STATUS[letter]))
     return changes

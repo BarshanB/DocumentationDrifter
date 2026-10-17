@@ -5,7 +5,7 @@ A service that looks at what changed between two commits of a public GitHub repo
 ## Where the project is heading
 
 **End product**:
-The finished system that [phase2.pdf](plan/phase2.pdf) describes. Each version takes inspiration from it but may differ from it; the roadmap says which version builds which part.
+The finished system that [phase2.pdf](plan/phase2.pdf) describes; [endProduct/](endProduct/README.md) holds a text version and its six diagrams. Each version takes inspiration from it but may differ from it; the roadmap says which version builds which part.
 _Avoid_: the spec (when only the end product is meant), final version (that is the last version we build, which may differ from the end product)
 
 **Version**:

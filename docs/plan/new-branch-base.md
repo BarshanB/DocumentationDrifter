@@ -8,7 +8,7 @@ This affects the v3 GitHub Action and the v4 webhook, which decide what base to 
 
 ## Before: the schema's literal reading
 
-[Schema v14](../Models/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and the end product's M4 ([diagram](../endProduct/05-M4-run-file-schema.png)) has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
+[Schema v14](../endProduct/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and the end product's M4 ([diagram](../endProduct/05-M4-run-file-schema.png)) has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
 
 ```mermaid
 flowchart TD

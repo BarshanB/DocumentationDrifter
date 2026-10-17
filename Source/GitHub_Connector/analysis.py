@@ -21,9 +21,9 @@ from GitHub_Connector.schemas import (
 )
 from GitHub_Connector.settings import get_settings
 
-# matches owner/name as GitHub allows it, checked before any network call
-REPOSITORY = re.compile(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$")
-SHA = re.compile(r"^[0-9a-fA-F]{7,40}$")
+# matches owner/name and 7-40 hex before any network call, \Z since $ would accept a trailing newline
+REPOSITORY = re.compile(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+\Z")
+SHA = re.compile(r"^[0-9a-fA-F]{7,40}\Z")
 
 
 def validate(request: AnalysisRequest) -> None:
@@ -54,7 +54,7 @@ def slot() -> threading.BoundedSemaphore:
 
 
 def analyze(request: AnalysisRequest) -> AnalysisResult:
-    # validates, then waits for a slot, so time spent queued never counts against the deadline
+    # runs one analysis in a slot, starting the deadline only once the slot is free
     validate(request)
     with slot():
         return _analyze(request, time.monotonic() + get_settings().analysis_deadline)

@@ -129,3 +129,16 @@ def test_malformed_id_gives_the_same_404_and_reads_nothing_outside(api, v1_env, 
     r = api.get(f"/system/analysis/{analysis_id}")
     assert r.status_code == 404
     assert r.json() == UNKNOWN_RUN
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"repository": "octo/demo\n", "commit_id": "a" * 40},
+        {"repository": "octo/demo", "commit_id": "abcdef1\n"},
+        {"repository": "octo/demo", "commit_id": "a" * 40, "base_commit": "abcdef1\n"},
+    ],
+)
+def test_trailing_newline_is_malformed(api, no_remote, body):
+    assert_invalid(api.post("/system/analyze", json=body))
+    assert_nothing_happened(no_remote)

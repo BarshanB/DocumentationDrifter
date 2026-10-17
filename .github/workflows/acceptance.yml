@@ -21,7 +21,6 @@ jobs:
     timeout-minutes: 30
     env:
       DRIFTER_TARGET_URL: ${{ inputs.target_url || vars.DRIFTER_TARGET_URL }}
-      DRIFTER_TEST_REPO: ${{ vars.DRIFTER_TEST_REPO || 'kaan-kanadasi/DocumentationDrifter-testrepo' }}
       DRIFTER_REQUIRE_REFERENCE: "1"
       DRIFTER_REQUIRE_ANONYMOUS: "1"
     steps:

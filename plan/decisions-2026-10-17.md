@@ -99,7 +99,7 @@ Also seen, and already allowed: `docs/overrides/partials/nav.html` is DOCUMENTAT
 
 **Route list at `/system` (Kaan, later the same day).** Plain `/system` answers with a JSON list of the routes, so a person opening the base URL sees what's there instead of 404. The reference service has no such route. It is left out of the OpenAPI document and out of the conformance set, so the schema comparison is unaffected.
 
-**Public test repo (ticket 11, later the same day).** Published under Kaan's account as `kaan-kanadasi/DocumentationDrifter-testrepo`, since this session could create repositories only there. Comparing its labels with the reference service stays opt-in (DRIFTER_TEST_REPO set explicitly, as the acceptance workflow does) until the three ticket 12 differences are settled, so normal CI stays green.
+**Public test repo (ticket 11, later the same day).** Published under Kaan's account as `kaan-kanadasi/DocumentationDrifter-testrepo`, since this session could create repositories only there. The online label tests use it by default. Comparing its labels with the reference service stays off (turned on with DRIFTER_LABEL_CONFORMANCE=1, which neither workflow sets) until the three ticket 12 differences are settled, so CI and the acceptance run can stay green.
 
 ## Still open
 

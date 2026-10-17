@@ -10,7 +10,7 @@ First Deliverable stage functions essentially as an LLM wrapper that tracks GitH
 
 **Course test routes.** `POST /system/test/setup` with `{"session_id": "...", "setup": {...}}` opens a session (201, or 409 if the id is taken). `GET /system/test/report?session_id=...` then reports how many executable lines of the v1 code ran while handling requests since that setup: `{"session_id", "coverage": {"code": {"covered", "total", "basis"}}}`. Both match the reference service's shapes and error bodies (`{"message", "source": "system"}`). Sessions live in memory, so a restart or redeploy forgets them and their report becomes 404.
 
-**Test repo.** The labelled test cases live in a public repo, [kaan-kanadasi/DocumentationDrifter-testrepo](https://github.com/kaan-kanadasi/DocumentationDrifter-testrepo), built by `tools/testrepo.py`. Rebuild and republish it after changing any label.
+**Test repo.** The labelled test cases live in a public repo, [kaan-kanadasi/DocumentationDrifter-testrepo](https://github.com/kaan-kanadasi/DocumentationDrifter-testrepo), built by `tools/testrepo.py`. The online label tests use it by default (`DRIFTER_TEST_REPO=owner/name` points them elsewhere, an empty value turns them off). After changing any label, republish it from an account that can push there: `python tools/testrepo.py /tmp/testrepo` then `git -C /tmp/testrepo push --force https://github.com/kaan-kanadasi/DocumentationDrifter-testrepo main`. The `label/*` tags are optional; the tests find labels by the SHAs in the manifest. `DRIFTER_LABEL_CONFORMANCE=1` also compares every label with the reference service; it stays off until the ticket 12 differences are settled.
 
 **Run locally**
 

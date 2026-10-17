@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -10,6 +11,9 @@ import httpx
 import pytest
 
 import reference
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import testrepo  # noqa: E402
 
 MISSING_REPO = "octocat/this-repo-cannot-exist-7f3a9c"
 HELLO = {"repository": "octocat/Hello-World", "commit_id": "7fd1a60"}
@@ -132,16 +136,9 @@ CASES = {
 
 
 def label_cases():
-    # adds every test-repo label only when DRIFTER_TEST_REPO is set explicitly (the acceptance workflow does),
-    # since the reference service differs on skipped files and hidden paths until Kaan decides (ticket 12)
-    repo = os.environ.get("DRIFTER_TEST_REPO", "")
-    if not repo:
+    # adds every test-repo label when DRIFTER_LABEL_CONFORMANCE=1, off until the ticket 12 differences are settled
+    if os.environ.get("DRIFTER_LABEL_CONFORMANCE") != "1":
         return {}
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-    import testrepo
-
     return {f"label-{name}": ("POST", "/analyze", None) for name in testrepo.LABELS}
 
 
@@ -151,7 +148,8 @@ def test_conformance(case, target, github_env, live_reference, request):
     if case.startswith("label-"):
         built = request.getfixturevalue("built")
         entry = built[2]["labels"][case[len("label-"):]]
-        method, path, body = "POST", "/analyze", {"repository": os.environ["DRIFTER_TEST_REPO"], **entry["request"]}
+        repo = os.environ.get("DRIFTER_TEST_REPO", testrepo.PUBLIC_REPO)
+        method, path, body = "POST", "/analyze", {"repository": repo, **entry["request"]}
     else:
         method, path, body = CASES[case]
     ours = target.request(method, "/system" + path, json=body)

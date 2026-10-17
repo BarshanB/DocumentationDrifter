@@ -307,3 +307,25 @@ def post(client, body: bytes, delivery="d-1", event="push", signature=None):
         "Content-Type": "application/json",
     }
     return client.post("/hooks/github", content=body, headers=headers)
+
+
+# --- test repo -------------------------------------------------------
+
+LOCAL_TESTREPO = "fixtures/drifter-testrepo"
+
+
+@pytest.fixture(scope="session")
+def built(tmp_path_factory):
+    # builds the test repo once per session and reads the manifest back out of it, shared by ticket 11 and 12 tests
+    import json
+    import subprocess
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+    import testrepo
+
+    root = tmp_path_factory.mktemp("testrepo")
+    bare = root / f"{LOCAL_TESTREPO}.git"
+    testrepo.build(bare)
+    raw = subprocess.run(["git", "show", "main:manifest.json"], cwd=bare, capture_output=True, check=True).stdout
+    return root, bare, json.loads(raw)

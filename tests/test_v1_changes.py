@@ -6,7 +6,19 @@ import pytest
 
 from repos import git
 
-SYMLINKS = hasattr(os, "symlink")
+def _can_symlink() -> bool:
+    # checks that this machine can create symlinks (Windows needs Developer Mode for it)
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as d:
+        try:
+            os.symlink("target", os.path.join(d, "link"))
+            return True
+        except (OSError, NotImplementedError):
+            return False
+
+
+SYMLINKS = _can_symlink()
 
 
 def analyse(api, head, **extra):

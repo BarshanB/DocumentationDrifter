@@ -1,7 +1,7 @@
 ====================================================================================================
 DOCUMENTATION TRACKER: THE END PRODUCT
 Text version of phase2.pdf (Phase 2 specification, Teams 15 and 16).
-The six diagrams are separate files in this folder.
+The seven diagrams are separate files in this folder.
 ====================================================================================================
 
 *** INSPIRATION, NOT A BLUEPRINT ***
@@ -22,7 +22,7 @@ Even firm-sounding lines here have already changed: section 8.2 keeps GenAI out 
 system, yet the roadmap brings an LLM in from v1.2. The document also contradicts itself in places;
 the last section lists where.
 
-THE SIX DIAGRAMS, IN READING ORDER
+THE SEVEN DIAGRAMS, IN READING ORDER
 
   01-system-boundary.png               who is inside the tracker, who is outside, and what crosses the line (2.1)
   02-M1-data-flow-and-context.png      M1: the data path from a push or API call to the evidence store
@@ -30,11 +30,12 @@ THE SIX DIAGRAMS, IN READING ORDER
   04-M3-file-level-finding-rule.png    M3: when one changed file produces a finding, and of which type
   05-M4-run-file-schema.png            M4: the request, the run file and the error body every team must share
   06-M5-finding-review-workflow.png    M5: where a finding goes and how a person's decision is recorded
+  07-team-architecture-sketch.png      section 7.1: the team's hand-drawn architecture sketch
 
 The text below follows the original section by section. Where the original shows a figure, a
-[DIAGRAM] line names the file to open. The original, with its figures in place, stays at
-plan/phase2.pdf. README.md in this folder says how each diagram compares with what v1.1 actually
-does.
+[DIAGRAM] line names the file to open. The original PDF was removed from the repo on 2026-10-17;
+this text and the diagram files replace it. README.md in this folder says how each diagram
+compares with what v1.1 actually does.
 
 ====================================================================================================
 Q1 COMMON PROBLEM SELECTION
@@ -484,8 +485,8 @@ Q7 TEAM SYSTEM DESIGN
 
 7.1 ARCHITECTURE AND DATA FLOW
 
-[NOTE] The architecture figure for this section is not one of the six diagrams in this folder. It is
-       on page 14 of the original, plan/phase2.pdf.
+[DIAGRAM] Diagram 07: the team's hand-drawn architecture sketch
+          open endProduct/07-team-architecture-sketch.png
 
 7.2 DESIGN DECISIONS
 
@@ -627,8 +628,9 @@ code-review entry. https://github.com/mattpocock/skills/tree/main. Accessed: 202
 INCONSISTENCIES - ASSESSED BY LLM WITHIN DOC
 ====================================================================================================
 
-[NOTE] Kept as it appears at the end of the original. Its page numbers point to pages of
-       plan/phase2.pdf, not of this text version.
+[NOTE] Kept as it appears at the end of the original. Its page numbers point to pages of the
+       original phase2.pdf (no longer in the repo); the section numbers it names find the same places
+       in this text.
 
 We need to fix these before next phase so that we have a clear idea.
 

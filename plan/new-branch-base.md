@@ -8,7 +8,7 @@ This affects the v3 GitHub Action and the v4 webhook, which decide what base to 
 
 ## Before: the schema's literal reading
 
-[Schema v14](../Models/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and [phase2.pdf](phase2.pdf)'s M4 has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
+[Schema v14](../Models/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and the end product's M4 ([diagram](../endProduct/05-M4-run-file-schema.png)) has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
 
 ```mermaid
 flowchart TD
@@ -72,7 +72,7 @@ When the default branch is first created and its head is a root commit, the Acti
 
 - **Unchanged:** a first audit still means an analysis with no base.
 - **Clarified:** when one happens. A first audit happens only when the head is a root commit. A push that creates a branch compares against the merge base with the default branch.
-- **Refined in phase2.pdf's M4:** "Action: PR base or push before" becomes the merge base for pull requests (decision 10), for force pushes, and for new branches (this decision). For a normal push, it stays the push's `before`.
+- **Refined in the end product's M4:** "Action: PR base or push before" becomes the merge base for pull requests (decision 10), for force pushes, and for new branches (this decision). For a normal push, it stays the push's `before`.
 
 ## Where it is recorded
 

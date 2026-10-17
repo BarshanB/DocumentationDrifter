@@ -15,8 +15,9 @@
 | [04-M3-file-level-finding-rule.png](04-M3-file-level-finding-rule.png) | M3: when one changed file produces a finding, and of which type |
 | [05-M4-run-file-schema.png](05-M4-run-file-schema.png) | M4: the request, the run file and the error body every team must share |
 | [06-M5-finding-review-workflow.png](06-M5-finding-review-workflow.png) | M5: where a finding goes and how a person's decision is recorded |
+| [07-team-architecture-sketch.png](07-team-architecture-sketch.png) | Section 7.1: the team's hand-drawn architecture sketch |
 
-Read the diagrams in that order: the boundary first, then a request's path through the models. The original, with every figure in place, stays at [plan/phase2.pdf](../plan/phase2.pdf). Its section 7.1 architecture figure (page 14) is the one figure not copied here.
+Read the diagrams in that order: the boundary first, then a request's path through the models. [07-team-architecture-sketch.png](07-team-architecture-sketch.png) is Muhammad's hand-drawn architecture from section 7.1, a team design sketch rather than a model. This folder replaces the original phase2.pdf, which was removed from the repo on 2026-10-17.
 
 ## The purpose, in one paragraph
 
@@ -42,3 +43,4 @@ v1.1 is the first slice: change detection over the API, deployed on Railway. Mos
 - **04, M3.** Only the CLASSIFY step exists: the first matching path rule wins, everything else is OTHER, and `config_version` is a hash of the rules file. `issues[]` is always empty. Findings arrive in v1.2, decided by an LLM (roadmap decision 4); a code-to-doc mapping file comes in v1.3 or v2.
 - **05, M4.** v1.1 copies the other team's OpenAPI document, which differs from M4. A change is `path`, `old_path`, `change_type` and `category`; a rename is one RENAMED change, not a delete plus an add; TYPE_CHANGED exists; we add DOCUMENTATION to the categories; and the error codes are INVALID_REQUEST, REPOSITORY_NOT_FOUND, COMMIT_NOT_FOUND, TIMEOUT and WRITE_FAILED.
 - **06, M5.** Not in v1.1. The GitHub Action, its pull request and commit comments, and the review loop are all planned for v3 ("hosted review loop" in the roadmap). Whether decisions live in PR replies, as M5 shows, or in a small review endpoint is still open (roadmap decision 7).
+- **07, architecture sketch.** An early team sketch, not a model. Most of it is later work or outside the scope: user sign-in, a mobile review module, and documentation editing, which the review notes flag as clashing with the read-only scope (note 3).

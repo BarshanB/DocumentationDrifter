@@ -4,7 +4,7 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 
 ## Scope and the LLM
 
-**Q1 · LLM at runtime.** Should v1 keep the LLM out of the running system, as [phase2.pdf](phase2.pdf) §7, §8.2 and §9.1 say?
+**Q1 · LLM at runtime.** Should v1 keep the LLM out of the running system, as [the end product](../endProduct/README.md) §7, §8.2 and §9.1 say?
 **Answer:** No. An LLM is the component that decides drift.
 **Why:** Kaan's direction for the project is that the LLM makes the drift call. This overrides the spec's "GenAI will not be part of the running system".
 

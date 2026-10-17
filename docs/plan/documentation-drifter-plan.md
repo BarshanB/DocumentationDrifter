@@ -22,7 +22,7 @@ A read-only service, called by a GitHub Action on every push and pull request, t
 | Failed analyses saved as HTTP 200 with status ERROR (M2) | 400, 404 or 500 with an `ErrorBody`, nothing saved | Decision 13; matches the reference service |
 | Error codes `REPO_NOT_FOUND`, `REPO_NOT_ACCESSIBLE`, `INVALID_CONFIG`, `CHECKS_SKIPPED`, `DETECTOR_ERROR` | The contract's codes: `INVALID_REQUEST`, `REPOSITORY_NOT_FOUND`, `COMMIT_NOT_FOUND`, `TIMEOUT`, `WRITE_FAILED`; `LLM_UNAVAILABLE` from v1.2; `INVALID_CONFIG` returns with the mapping file | Reference service; Q16 |
 | `POST /analyze`, `GET /analysis/{id}` | The same under `/system`, plus `GET /system/health` | Reference service |
-| Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, `WebHookConnectors.png`) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
+| Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, [`WebHookConnectors.png`](../endProduct/WebHookConnectors.png)) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
 | A documentation viewer in Phase 3 (§6.1) | A minimal read-only viewer in **v3**, only if the course still requires it | Roadmap v3 item 5 |
 | User notifications in Phase 5 | **v4**; the end product's §6.4 names them as the first thing to cut | Roadmap v4 |
 | The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15 ([graphs](new-branch-base.md)), guide step 3 |

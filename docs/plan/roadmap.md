@@ -67,7 +67,7 @@ Nothing here changes the version boundaries. It tightens what v1 must match, and
 | Tests | 19 pytest cases on the receiver and config. Re-run on 2026-10-17: 18 pass and 1 skips, because `test_dotenv_is_read_when_running_from_source` needs a `.env`, which is gitignored. |
 | Not yet built | `/analyze`, `/analysis/{id}`, diffing, classification, run files, mapping, detection, review, deployment and CI. |
 
-v0 is the receiver box of `WebHookConnectors.png`, with delivery-id dedupe in SQLite; there is no queue, worker or reconciler. The tester calls the stateless `/analyze` API instead, so v1 builds that. v0 stays dormant in v1: the v1 app neither serves nor imports it. In v4 the webhook becomes one more caller of the same `analyze()` function (decision 14), so nothing in v0 is thrown away.
+v0 is the receiver box of [`WebHookConnectors.png`](../endProduct/WebHookConnectors.png), with delivery-id dedupe in SQLite; there is no queue, worker or reconciler. The tester calls the stateless `/analyze` API instead, so v1 builds that. v0 stays dormant in v1: the v1 app neither serves nor imports it. In v4 the webhook becomes one more caller of the same `analyze()` function (decision 14), so nothing in v0 is thrown away.
 
 ---
 
@@ -221,7 +221,7 @@ The guide predates the pod's live service. In these three places v1 follows the 
 Each of these stays out until Kaan decides to add it (per `Skills/CLAUDE.md`):
 
 - Section- and symbol-level mapping from schema v14 (`heading_path`, `path::name` selectors, hunk overlap, 1-hop dependencies). This needs the pod to extend `Finding`.
-- A GitHub App with per-user sign-in and repo "sleep/revive" (the original outline in `store.py` at `5b74560` and `WebHookConnectors.png`).
+- A GitHub App with per-user sign-in and repo "sleep/revive" (the original outline in `store.py` at `5b74560` and [`WebHookConnectors.png`](../endProduct/WebHookConnectors.png)).
 - Wiring v0's webhook to `analyze()` (decision 14). It needs an always-on host, because GitHub gives a webhook 10 seconds and doesn't redeliver failures on its own, and a job table or background worker, because an analysis takes longer than the ack. The receiver first gets its own router, since including `gitHook.app` would also bring its lifespan and root routes.
 - Running the analysis inside the consumer's runner (a CLI over `analyze()` against the runner's checkout), for scale-out and private repos. Those runs never reach our service, so they can't be reviewed or listed there.
 - Notifications. The spec names these as the first thing to cut.

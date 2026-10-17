@@ -17,6 +17,7 @@
 | [06-M5-finding-review-workflow.png](06-M5-finding-review-workflow.png) | M5: where a finding goes and how a person's decision is recorded |
 | [07-team-architecture-sketch.png](07-team-architecture-sketch.png) | Section 7.1: the team's hand-drawn architecture sketch |
 | [documentation-tracker-schema-v14.pdf](documentation-tracker-schema-v14.pdf) | Schema v14: the team's fuller data model for the end product (snapshots, the doc-to-code map, sections and symbols). Not built in v1; the roadmap moves its mapping to later versions (v2 and beyond). |
+| [WebHookConnectors.png](WebHookConnectors.png) | The webhook-connector outline behind v0: GitHub events go to a receiver that verifies and acknowledges them, then a job queue (deduplicated by delivery id), workers that fetch commits, and a database, with a reconciler that backfills gaps and a web app for sign-in and installs. v0 built only the receiver; the rest is v4, and only by conscious choice (roadmap). |
 
 Read the diagrams in that order: the boundary first, then a request's path through the models. [07-team-architecture-sketch.png](07-team-architecture-sketch.png) is Muhammad's hand-drawn architecture from section 7.1, a team design sketch rather than a model. This folder replaces the original phase2.pdf, which was removed from the repo on 2026-10-17.
 

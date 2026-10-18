@@ -330,7 +330,7 @@ def _skipped(git: _Git, old: str, head: str, changes: list[FileChange]) -> list[
             rest.append(c)
     if not rest:
         return skipped
-    binary = _numstat_binaries(git, old, head)
+    binary = _numstat_binaries(git, old, head, [c.path for c in rest])
     sizes = _sizes(git, [c.blob for c in rest])
     cap = get_settings().max_file_bytes
     to_read: list[FileChange] = []
@@ -352,9 +352,9 @@ def _skipped(git: _Git, old: str, head: str, changes: list[FileChange]) -> list[
     return skipped
 
 
-def _numstat_binaries(git: _Git, old: str, head: str) -> set[str]:
-    # asks git which changed paths are binary, which also fetches their blobs in one batch
-    raw = git.run("diff", "--numstat", "-z", "-M", "--no-ext-diff", old, head).stdout
+def _numstat_binaries(git: _Git, old: str, head: str, paths: list[str]) -> set[str]:
+    # asks git which of paths are binary, which also fetches their blobs in one batch and no others
+    raw = git.run("diff", "--numstat", "-z", "-M", "--no-ext-diff", old, head, "--", *paths).stdout
     fields = raw.decode("utf-8", "surrogateescape").split("\0")
     binary: set[str] = set()
     i = 0

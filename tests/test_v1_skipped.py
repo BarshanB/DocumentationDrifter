@@ -139,3 +139,20 @@ def test_the_denylist_lives_in_the_rules_file(api, make_repo, tmp_path, monkeypa
     after = analyse(api, head)
     assert after["skipped"] == []
     assert after["config_version"] != before["config_version"]
+
+
+def test_file_skipped_by_type_is_never_downloaded(api, make_repo):
+    # removes the image from the remote, so any attempt to download it fails the analysis
+    from repos import git
+
+    repo = make_repo()
+    repo.commit({"seed": "0\n"})
+    head = repo.commit({"big.png": PNG, "notes.md": "hi\n"})
+    blob = git("rev-parse", f"{head}:big.png", cwd=repo.bare)
+    loose = repo.bare / "objects" / blob[:2] / blob[2:]
+    assert loose.is_file(), "expected the pushed image as a loose object"
+    loose.chmod(0o644)  # git writes objects read-only, which Windows won't delete
+    loose.unlink()
+    body = analyse(api, head)
+    assert reason_for(body, "big.png") == "UNSUPPORTED_FILE_TYPE"
+    assert paths(body["changes"]) == ["big.png", "notes.md"]

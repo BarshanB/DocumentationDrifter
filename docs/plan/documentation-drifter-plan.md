@@ -14,7 +14,7 @@ A read-only service, called by a GitHub Action on every push and pull request, t
 
 | Phase 2 said | Now | Why |
 |---|---|---|
-| No GenAI in the running system; a hand-written rule-based detector (§8.1, §8.2) | An LLM decides drift from **v1.2**, probabilistic on purpose for now; the **final version** is deterministic | Decision 4 (Q1, Q9); also Kaan's note in `Source/LLM_Shell/LLM.md` |
+| No GenAI in the running system; a hand-written rule-based detector (§8.1, §8.2) | An LLM decides drift from **v1.2**, probabilistic on purpose for now; the **final version** is deterministic | Decision 4 (Q1, Q9) |
 | A confidence rating in Phase 4; AC-10 within 0.05 | No confidence field; AC-10 is checked without that clause, and the LLM's reasoning goes in `explanation` | Decision 5 (Q13); the shared contract has no such field |
 | A mapping file is required (M2, M3) | None in v1.1 or v1.2; the mapping file arrives in **v1.3** if time allows, otherwise **v2** | Q10 |
 | Section-level mapping (sectioning, schema v14) | **After v2.** The roadmap lists it under v4, because `Finding` is file-level in the shared contract and the pod would have to extend it | Roadmap "What this changes" 3 |

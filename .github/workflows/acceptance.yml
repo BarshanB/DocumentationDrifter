@@ -23,6 +23,7 @@ jobs:
       DRIFTER_TARGET_URL: ${{ inputs.target_url || vars.DRIFTER_TARGET_URL }}
       DRIFTER_REQUIRE_REFERENCE: "1"
       DRIFTER_REQUIRE_ANONYMOUS: "1"
+      DRIFTER_LABEL_CONFORMANCE: "1"
     steps:
       - uses: actions/checkout@v4
         with:

@@ -137,7 +137,7 @@ CASES = {
 
 
 def label_cases():
-    # adds every test-repo label when DRIFTER_LABEL_CONFORMANCE=1, off in CI until ticket 12 turns it on
+    # adds every test-repo label when DRIFTER_LABEL_CONFORMANCE=1, on in the acceptance workflow
     if os.environ.get("DRIFTER_LABEL_CONFORMANCE") != "1":
         return {}
     return {f"label-{name}": ("POST", "/analyze", None) for name in testrepo.LABELS}

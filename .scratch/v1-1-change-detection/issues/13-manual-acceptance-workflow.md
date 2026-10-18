@@ -4,7 +4,7 @@
 
 **Blocked by:** 10 (Public deployment on Railway's free plan); 12 (Full conformance set against the reference service)
 
-**Status:** ready to run: the push (02), the deploy (10) and the public test repo (11) are all done. Run it with target_url https://documentationdrifter-production.up.railway.app/system. It runs T-01 to T-07 against the public test repo (the default in `tools/testrepo.py`) and the conformance set without the labels; comparing the labels with the reference service is behind DRIFTER_LABEL_CONFORMANCE=1, off until Kaan settles the three ticket 12 differences.
+**Status:** done (2026-10-18). A manual run on `main` against https://documentationdrifter-production.up.railway.app/system passed every step (Actions run 39102903374): warm-up, the 23 labels for T-01 to T-07, and the conformance set. The workflow now sets DRIFTER_LABEL_CONFORMANCE=1, since tickets 16 and 17 settled the ticket 12 differences; run locally against the deploy, all 56 conformance cases with the labels matched the reference.
 
 **Spec:** docs/plan/spec-v1.1.md, user stories 54
 
@@ -12,4 +12,4 @@
 - [x] Its warm-up retries health long enough to ride out a cold start of about a minute, and fails with a clear message if the service never answers.
 - [x] T-01 to T-07, driven by test-repo labels, and the conformance test run against a target URL that the workflow sets. When no target is set, the same tests run against the in-process app.
 - [x] Each POST is followed at once by a GET of its analysis_id, which returns identical bytes; this matters because run files vanish on spin-down.
-- [ ] A failure in either suite fails the run. Once Kaan approves the push, a manual run passes against the deployed URL.
+- [x] A failure in either suite fails the run. Once Kaan approves the push, a manual run passes against the deployed URL.

@@ -6,7 +6,7 @@
 
 **Status:** done, but superseded in part by ticket 16 (2026-10-17): skipped files now stay in changes[], and reasons become codes after an extension denylist. Earlier: done, except the reference probe. Skipped files are left out of changes[] as the connector guide says; the probe that confirms this, and the reason wording, waits for ticket 12 because the reference service can't be reached from this workspace.
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 32, 33, 34, 47
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 32, 33, 34, 47
 
 - [x] A changed PNG is in skipped[] with a binary reason. A file counts as binary when git marks it as binary or when its first 8 KB contain a NUL byte.
 - [x] A text file just over 1 MB is skipped with a size reason, and one just under 1 MB stays a change.

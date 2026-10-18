@@ -1,4 +1,6 @@
-# Decision log: grilling session, 2026-10-17
+# Decision log
+
+Every decision, with its reason, oldest first. "Still open" at the end lists what is not decided yet. A new session goes at the end as its own section, dated in its heading.
 
 Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the question, the answer and the reason for it. The [roadmap](roadmap.md) carries the same decisions in its v1 section and its decisions table (rows 4, 16 and 18–22).
 
@@ -162,9 +164,90 @@ The whole conformance set, with the 23 test-repo labels (DRIFTER_LABEL_CONFORMAN
 - Skip reasons: codes, not sentences (T12-Q2). `UNSUPPORTED_FILE_TYPE` matches; our extra `BINARY_FILE`, `FILE_TOO_LARGE` and `NOT_UTF8` stay a known difference resting on REQ-05.
 - The unknown-run 404: `{"code": "ANALYSIS_NOT_FOUND", "message": "analysis <id> does not exist"}` on both (ticket 03), for an unknown and a malformed id.
 
+## Decision 15: the base for a push that creates a branch, 2026-10-17
+
+**Question:** when a push creates a new branch, GitHub sends 40 zeros as `before`. What base commit should the analysis compare against?
+
+**Decision (Kaan, 2026-10-17, roadmap decision 15):** the merge base with the default branch, which is where the branch split off. A first audit (no base, every file ADDED) happens only when the head is a root commit, the first commit of a repo.
+
+This affects the v3 GitHub Action and the v4 webhook, which decide what base to send. The v1.1 service doesn't change either way. It already compares against the parent when `base_commit` is left out, does a first audit for a root commit, and answers a base of 40 zeros with 404 `COMMIT_NOT_FOUND`.
+
+### Before: the schema's literal reading
+
+[Schema v14](../endProduct/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and the end product's M4 ([diagram](../endProduct/05-M4-run-file-schema.png)) has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
+
+```mermaid
+flowchart TD
+  accTitle: New-branch push under the schema's first-audit reading
+  accDescr: A new branch is pushed and GitHub sends 40 zeros as before. parse.py stores no base and calls it a first audit. The Action then has no way to ask the shared API for no base, so it either checks only the last commit or gets a 404.
+
+  P["Push creates a new branch<br/>GitHub sends before = 000…0"]
+  R["parse.py stores no base<br/>calls it a first audit"]
+  A["Action asks for no base<br/>the shared API can't express it"]
+  OUT["Leaves base_commit out<br/>only the last commit is checked"]
+  ZERO["Sends 000…0 as base_commit<br/>404 COMMIT_NOT_FOUND"]
+
+  P --> R --> A
+  A -->|"option 1"| OUT
+  A -->|"option 2"| ZERO
+
+  classDef partly fill:#FAEEDA,stroke:#854F0B,color:#633806
+  classDef fails fill:#FCEBEB,stroke:#A32D2D,color:#791F1F
+  class OUT partly
+  class ZERO fails
+```
+
+Why it doesn't work:
+1. **The shared API can't ask for "no base" when the head has a parent.** Leaving `base_commit` out means "compare with the parent", and 40 zeros isn't a commit. Only a root commit can be a first audit.
+2. **Even if it could, it would check nothing useful.** A first audit lists the whole repo as ADDED, and schema v14 gives it "resolution checks only", meaning no findings. The branch's real changes would never be checked for drift.
+
+### After: decision 15
+
+```mermaid
+flowchart TD
+  accTitle: New-branch push under decision 15
+  accDescr: A new branch is pushed and GitHub sends 40 zeros as before. The Action asks GitHub's compare endpoint for the merge base with the default branch and sends it as base_commit. If the branch has new commits, exactly those are checked. If not, there is nothing to check and the push is skipped.
+
+  P["Push creates a new branch<br/>GitHub sends before = 000…0"]
+  M["Action finds the merge base<br/>where the branch split off"]
+  S["Sends it as base_commit<br/>a normal request, no API change"]
+  NEW["Branch has new commits<br/>exactly those are checked"]
+  NONE["No new commits<br/>merge base = head, push skipped"]
+
+  P --> M --> S
+  S -->|"merge base ≠ head"| NEW
+  S -->|"merge base = head"| NONE
+
+  classDef works fill:#E1F5EE,stroke:#0F6E56,color:#085041
+  class NEW works
+```
+
+- The merge base comes from `merge_base_commit` in GitHub's compare endpoint, `GET /repos/{owner}/{repo}/compare/{default}...{head}`. The Action makes the same call for pull requests (decision 10) and force pushes, so this adds no new machinery. A sketch of the workflow is in [actions readiness](reports/actions-readiness.md).
+- The v3 Action runs on pushes to the default branch and on pull requests. A push that creates a branch therefore reaches it only once: the push that creates the default branch in a new repo. There the merge base equals the head, so it is skipped. Feature branches are checked through their pull requests.
+- In v4, the webhook receives every push. This rule is what lets it check a new feature branch's own commits.
+
+### Proposed, not decided: a first audit instead of a skip
+
+When the default branch is first created and its head is a root commit, the Action could leave `base_commit` out instead of skipping. The service would then do a first audit, which is exactly the schema's behaviour, and the only case the shared API can express. If several commits were pushed at once, the service would compare the last one with its parent. Kaan to decide.
+
+### What it changes from the schema
+
+- **Unchanged:** a first audit still means an analysis with no base.
+- **Clarified:** when one happens. A first audit happens only when the head is a root commit. A push that creates a branch compares against the merge base with the default branch.
+- **Refined in the end product's M4:** "Action: PR base or push before" becomes the merge base for pull requests (decision 10), for force pushes, and for new branches (this decision). For a normal push, it stays the push's `before`.
+
+### Where it is recorded
+
+- [Roadmap](roadmap.md), decision 15 and v3 item 2
+- [Connector guide](history/github-connector-steps.md), step 3's base table
+- [CONTEXT.md](../../CONTEXT.md), "First audit"
+- [docs/Models/v1](../Models/v1/README.md): M3 (a first audit is a root commit) and M4 (`base_commit` is null only for a root commit)
+- v0's `parse.py`: the property is now `has_before`, renamed from `needs_base_snapshot`, and its comment and test follow this decision (2026-10-17)
+
 ## Still open
 
 - ~~**Skipped files, skip reasons and hidden paths**~~: decided that evening (T12-Q1, T12-Q2, T12-Q8 and T12-Q9). Still to ask the pod: their full list of unsupported file types, and whether they ever skip by content.
 - **`/test` endpoints:** built from what the reference service was seen to do (above); the pod still has to confirm the semantics.
 - **Unexpected git failures:** a git call that fails in a way the connector doesn't foresee (not a timeout, a missing repository or an unknown commit) returns FastAPI's plain-text 500 instead of an `ErrorBody`, and none of the five contract codes fits. Ask the pod what code their service uses (Kaan, 2026-10-17); asked in [pod-report-2026-10-17.md](reports/pod-report-2026-10-17.md), still to settle once they answer.
-- **Repository pattern:** [M0](M0-build-order.pdf) uses `^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[\w.-]{1,100}$`, stricter than the spec's `^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$`. The spec's pattern stays until the conformance run shows what the reference service accepts (Kaan, 2026-10-17). Update, later that day: the reference's captured OpenAPI document declares M0's pattern, `^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[A-Za-z0-9._-]{1,100}$`. The conformance case `not-a-repo` gives the same 400 under both patterns; names the two patterns disagree on (a leading hyphen, an owner over 39 characters, a name over 100) haven't been compared yet.
+- **Repository pattern:** [M0](history/M0-build-order.pdf) uses `^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[\w.-]{1,100}$`, stricter than the spec's `^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$`. The spec's pattern stays until the conformance run shows what the reference service accepts (Kaan, 2026-10-17). Update, later that day: the reference's captured OpenAPI document declares M0's pattern, `^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[A-Za-z0-9._-]{1,100}$`. The conformance case `not-a-repo` gives the same 400 under both patterns; names the two patterns disagree on (a leading hyphen, an owner over 39 characters, a name over 100) haven't been compared yet.
+- **First audit for a new repo (decision 15):** when the default branch is first created at a root commit, should the Action ask for a first audit instead of skipping? Proposed in the decision 15 section above, not decided.

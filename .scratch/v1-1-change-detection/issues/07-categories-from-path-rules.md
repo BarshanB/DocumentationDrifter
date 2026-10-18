@@ -6,7 +6,7 @@
 
 **Status:** done, except the lockfile probe. Lockfiles are OTHER by path; asking the reference service what it does waits for ticket 12, because it can't be reached from this workspace.
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 27, 28, 29, 30, 31
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 27, 28, 29, 30, 31
 
 - [x] A reStructuredText file under docs is DOCUMENTATION (T-04). So are Markdown, reStructuredText and plain-text files anywhere, and anything under docs.
 - [x] Requirements files such as requirements.txt and requirements-dev.txt are OTHER, because their rule comes before the plain-text rule. A requirements file under docs is OTHER as well.

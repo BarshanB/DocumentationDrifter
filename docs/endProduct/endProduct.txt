@@ -1,7 +1,7 @@
 ====================================================================================================
 DOCUMENTATION TRACKER: THE END PRODUCT
 Text version of phase2.pdf (Phase 2 specification, Teams 15 and 16).
-The seven diagrams are separate files in this folder.
+The six diagrams are separate files in this folder.
 ====================================================================================================
 
 *** INSPIRATION, NOT A BLUEPRINT ***
@@ -17,12 +17,12 @@ crosses its boundary, and what it must never do, such as change a repository, ru
 code, or make a compliance judgement that belongs to a person.
 
 What a version actually builds is set by docs/plan/roadmap.md, that version's spec (for v1.1,
-docs/plan/spec-v1.1.md) and the decision log in docs/plan/. Where they disagree with this document, they win.
+docs/Models/v1/v1.1/spec-v1.1.md) and the decision log in docs/plan/. Where they disagree with this document, they win.
 Even firm-sounding lines here have already changed: section 8.2 keeps GenAI out of the running
 system, yet the roadmap brings an LLM in from v1.2. The document also contradicts itself in places;
 the last section lists where.
 
-THE SEVEN DIAGRAMS, IN READING ORDER
+THE SIX DIAGRAMS, IN READING ORDER
 
   01-system-boundary.png               who is inside the tracker, who is outside, and what crosses the line (2.1)
   02-M1-data-flow-and-context.png      M1: the data path from a push or API call to the evidence store
@@ -30,7 +30,6 @@ THE SEVEN DIAGRAMS, IN READING ORDER
   04-M3-file-level-finding-rule.png    M3: when one changed file produces a finding, and of which type
   05-M4-run-file-schema.png            M4: the request, the run file and the error body every team must share
   06-M5-finding-review-workflow.png    M5: where a finding goes and how a person's decision is recorded
-  07-team-architecture-sketch.png      section 7.1: the team's hand-drawn architecture sketch
 
 The text below follows the original section by section. Where the original shows a figure, a
 [DIAGRAM] line names the file to open. The original PDF was removed from the repo on 2026-10-17;
@@ -485,8 +484,7 @@ Q7 TEAM SYSTEM DESIGN
 
 7.1 ARCHITECTURE AND DATA FLOW
 
-[DIAGRAM] Diagram 07: the team's hand-drawn architecture sketch
-          open docs/endProduct/07-team-architecture-sketch.png
+The original showed only a hand-drawn architecture sketch here, since removed from the repo.
 
 7.2 DESIGN DECISIONS
 

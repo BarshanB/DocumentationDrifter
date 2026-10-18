@@ -1,10 +1,10 @@
 # To do
 
-Items from the 2026-10-17 review of v1.1, left for later. Open questions for the pod are in the [decision log](../../docs/plan/decisions-2026-10-17.md) ("Still open"), and the remaining ticket work is in `.scratch/v1-1-change-detection/issues/`.
+Items from the 2026-10-17 review of v1.1, left for later. Open questions for the pod are in the [decision log](../../docs/plan/decisions.md) ("Still open"), and the remaining ticket work is in `.scratch/v1-1-change-detection/issues/`.
 
 ## Decided, to build in tickets 12 and 16
 
-- **Match the reference on skipped files** (T12-Q1 and T12-Q2, ticket 16, built 2026-10-17). Left: republish the public test repo, and the live label run against the reference service. Keep skipped files in `changes[]`; add the extension denylist with `UNSUPPORTED_FILE_TYPE` ahead of the content checks, whose reasons become `BINARY_FILE`, `FILE_TOO_LARGE` and `NOT_UTF8`. Hidden paths stay ignored (T12-Q8, T12-Q9). The test repo's expected answers change, so it is republished. This also closes "the skip reason follows the size setting".
+- **Match the reference on skipped files** (T12-Q1 and T12-Q2, ticket 16, built 2026-10-17, done 2026-10-18 with the test repo republished at 3aa60e6). Keep skipped files in `changes[]`; add the extension denylist with `UNSUPPORTED_FILE_TYPE` ahead of the content checks, whose reasons become `BINARY_FILE`, `FILE_TOO_LARGE` and `NOT_UTF8`. Hidden paths stay ignored (T12-Q8, T12-Q9). The test repo's expected answers change, so it is republished. This also closes "the skip reason follows the size setting".
 - **`tool_version` names the build** (T12-Q5 in the decision log). Report `1.1.0+<first 7 characters of RAILWAY_GIT_COMMIT_SHA>` when it is set, `1.1.0` otherwise; add `tool_version` to `KNOWN_DIFFERENT_FIELDS`; a test sets the variable and checks the result.
 - **The no-body setup message** (T12-Q4). Ours stays "body is required", recorded as a known difference resting on a fault in the reference, and reported to the pod with T-04.
 

@@ -18,7 +18,7 @@ From `plugin/mage/skills/self-communicate/drawing/diagrams.md`:
 - **Mermaid first.** The diagram is text in the same Markdown file as its prose, so it is reviewed and diffed like code. Hand-drawn SVG is only for layouts Mermaid can't express.
 - **Less is more.** "Pick the simplest type that carries the shape", strip decoration, and split a crowded diagram rather than add to it.
 - **Match the type to the shape:** a context or component diagram for structure, a state diagram for a lifecycle, a flowchart for decision logic, and an ER diagram for a schema.
-- **Generate pictures from the model, don't keep a hand-drawn second copy.** That is why the PNGs in `docs/Models/v1/rendered/` are regenerated from the Mermaid blocks.
+- **Generate pictures from the model, don't keep a hand-drawn second copy.** That is why the PNGs in `docs/Models/v1/v1_models_img/` are regenerated from the Mermaid blocks.
 - **Accessibility.** Each diagram carries `accTitle` and `accDescr`, and no distinction relies on color alone. Parts not implemented in Phase 3 are dashed, not just grey, and labelled "not implemented in Phase 3".
 
 ## How this fits the course

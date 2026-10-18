@@ -6,7 +6,7 @@
 
 **Status:** done
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 38, 39, 40, 41, 42, 44
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 38, 39, 40, 41, 42, 44
 
 - [x] A tiny configured analysis deadline gives 500 TIMEOUT in an ErrorBody.
 - [x] A tiny configured git-call timeout gives 500 TIMEOUT in the same way, and the git process is stopped rather than left running.

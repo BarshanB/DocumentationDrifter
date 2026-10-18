@@ -1,6 +1,6 @@
 # Spec: v1.1 change detection API
 
-Status: ready-for-agent · Written 2026-10-17 from the [roadmap](roadmap.md) v1 section and the [decision log](decisions-2026-10-17.md). Terms are as defined in [CONTEXT.md](../../CONTEXT.md).
+Status: **done**, v1.1 is built and deployed. · Written 2026-10-17 from the [roadmap](../../../plan/roadmap.md) v1 section and the [decision log](../../../plan/decisions.md). Terms are as defined in [CONTEXT.md](../../../../CONTEXT.md).
 
 **Amended 2026-10-17 by the ticket 12 grilling** (decision log, T12-Q1 to T12-Q5). Where a story or decision below is marked *Amended*, the decision log wins: skipped files stay in `changes[]`, skips are by file type first with code reasons, and `tool_version` carries the build. Hidden paths stay ignored (T12-Q8, T12-Q9).
 
@@ -143,7 +143,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 
 ## Further Notes
 
-- The reference service is the contract, so where the [connector guide](history/github-connector-steps.md) disagrees with it, the contract wins. That covers renames as one change, the code `REPOSITORY_NOT_FOUND`, and `TIMEOUT` as 500 with nothing saved.
+- The reference service is the contract, so where the [connector guide](../../../plan/history/github-connector-steps.md) disagrees with it, the contract wins. That covers renames as one change, the code `REPOSITORY_NOT_FOUND`, and `TIMEOUT` as 500 with nothing saved.
 - Tell the pod that their service returns OTHER for doc files and so fails T-04 as it stands.
 - Still open: how lockfiles are classified (roadmap decision 17) and what the `/test` endpoints should do (confirm with the pod before that work starts).
 - Free tier: runs vanish on spin-down and redeploy, so a `GET` after idle time can 404 on both teams' services.

@@ -6,7 +6,7 @@
 
 **Status:** done
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 1, 2, 3, 4, 5, 6, 7, 9, 14, 18, 22, 31, 34, 35, 37, 38, 43, 44, 45, 46, 47, 48, 52
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 1, 2, 3, 4, 5, 6, 7, 9, 14, 18, 22, 31, 34, 35, 37, 38, 43, 44, 45, 46, 47, 48, 52
 
 - [x] A shared test fixture builds a bare fixture repo in its own folder under the test's temporary directory, away from v0's test database. It sets its own git identity so it runs on a clean machine, and it is not named client. It accepts partial clones and fetches by SHA the way GitHub does, so the blobless path is really exercised and doesn't quietly fall back to a full clone.
 - [x] The remote base URL is a config value that defaults to GitHub. Each test repoints it, along with the run store location and the temporary-clone location, using the settings pattern v0's tests already use. v0's own settings and tests are left as they are.

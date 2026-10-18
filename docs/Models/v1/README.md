@@ -2,15 +2,17 @@
 
 Five models of v1, the change detection API described in [docs/plan/roadmap.md](../../plan/roadmap.md) and [docs/plan/history/github-connector-steps.md](../../plan/history/github-connector-steps.md). They follow MAGE: each model starts from one engineering question and keeps only what that question needs. They narrow the Phase 2 models (M1 to M5 in [docs/endProduct/](../../endProduct/README.md)) to what v1 actually builds, and they use the terms in [CONTEXT.md](../../../CONTEXT.md).
 
-v1 now ships in two steps (decision log, 2026-10-17): **v1.1** is the git change detection, and **v1.2** adds an LLM that decides drift and fills `issues[]`. Parts that only v1.2 has are labelled v1.2 in the diagrams.
+v1 now ships in two steps (decision log, 2026-10-17): **v1.1** is the git change detection (done; its spec is [v1.1/spec-v1.1.md](v1.1/spec-v1.1.md)), and **v1.2** adds an LLM that decides drift and fills `issues[]`. Parts that only v1.2 has are labelled v1.2 in the diagrams.
+
+For a plain-language overview before the models, read [v1.1/v1.1-guide.html](v1.1/v1.1-guide.html) (open it from a local clone, since GitHub shows HTML as source). The models below hold the exact rules; where the two differ, the models win.
 
 | Model | MAGE class | Question |
 |---|---|---|
-| [M1 · Context and data flow](M1-context.md) | Structural | What is inside v1, what is outside it, and what data crosses the boundary? |
-| [M2 · Analysis lifecycle](M2-lifecycle.md) | Behavioral | What can happen to one analysis request, and how does each path end? |
-| [M3 · File rules](M3-file-rules.md) | Decision | For each changed path, is it reported, skipped or ignored, and which category does it get? |
-| [M4 · Run file and API schema](M4-run-file.md) | Structural and provenance | What does a request carry, and what is saved and returned for each run? |
-| [M5 · Requirement traceability](M5-traceability.md) | Provenance | Which v1 model carries each Phase 2 requirement, and which automated check holds it? |
+| [M1 · Context and data flow](v1_models/M1-context.md) | Structural | What is inside v1, what is outside it, and what data crosses the boundary? |
+| [M2 · Analysis lifecycle](v1_models/M2-lifecycle.md) | Behavioral | What can happen to one analysis request, and how does each path end? |
+| [M3 · File rules](v1_models/M3-file-rules.md) | Decision | For each changed path, is it reported, skipped or ignored, and which category does it get? |
+| [M4 · Run file and API schema](v1_models/M4-run-file.md) | Structural and provenance | What does a request carry, and what is saved and returned for each run? |
+| [M5 · Requirement traceability](v1_models/M5-traceability.md) | Provenance | Which v1 model carries each Phase 2 requirement, and which automated check holds it? |
 
 ## How to read them
 
@@ -36,4 +38,4 @@ All v1 code goes in `Source/GitHub_Connector/`, in new modules beside the v0 fil
 
 ## Source and pictures
 
-The Mermaid block in each `.md` file is the model, and GitHub renders it inline. The PNG pictures in [rendered/](rendered/) are generated from those blocks (M4 has none: read it on GitHub, which draws its block), so after editing a block, regenerate its PNG instead of editing the picture by hand: run `mmdc` from `@mermaid-js/mermaid-cli` on the block with a `.png` output, or paste the block into mermaid.live and export a PNG.
+The Mermaid block in each `.md` file is the model, and GitHub renders it inline. The PNG pictures in [v1_models_img/](v1_models_img/) are generated from those blocks (M4 has none: read it on GitHub, which draws its block), so after editing a block, regenerate its PNG instead of editing the picture by hand: run `mmdc` from `@mermaid-js/mermaid-cli` on the block with a `.png` output, or paste the block into mermaid.live and export a PNG.

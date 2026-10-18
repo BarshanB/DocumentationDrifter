@@ -19,7 +19,7 @@ from GitHub_Connector.schemas import (
     Skipped,
     Status,
 )
-from GitHub_Connector.settings import get_settings
+from GitHub_Connector.settings import build_label, get_settings
 
 # matches owner/name and 7-40 hex before any network call, \Z since $ would accept a trailing newline
 REPOSITORY = re.compile(r"^[A-Za-z0-9-]+/[A-Za-z0-9._-]+\Z")
@@ -81,7 +81,7 @@ def _analyze(request: AnalysisRequest, deadline: float) -> AnalysisResult:
         head_commit=head,
         base_commit=base,
         config_version=rules.config_version(),
-        tool_version=get_settings().tool_version,
+        tool_version=build_label(),
         status=Status.SUCCESS,
         error=None,
         issues=[],

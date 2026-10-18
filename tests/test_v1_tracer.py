@@ -108,6 +108,17 @@ def test_tool_version_names_the_railway_build(api, make_repo, monkeypatch):
     assert analyse(api, head).json()["tool_version"] == "1.1.0+abcdef0"
 
 
+def test_tool_version_names_the_build_even_with_the_old_image_variable(api, make_repo, monkeypatch):
+    # keeps the build label when DRIFTER_TOOL_VERSION is set, as the deployed image used to set it
+    from GitHub_Connector.settings import get_settings
+
+    _, _, head = two_commits(make_repo)
+    monkeypatch.setenv("DRIFTER_TOOL_VERSION", "1.1.0")
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "abcdef0123456789abcdef0123456789abcdef01")
+    get_settings.cache_clear()
+    assert analyse(api, head).json()["tool_version"] == "1.1.0+abcdef0"
+
+
 def test_missing_repository_is_refused_and_nothing_saved(api, v1_env):
     r = analyse(api, "a" * 40, repo="octo/nothing-here")
     assert r.status_code == 404

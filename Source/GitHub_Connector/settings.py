@@ -6,7 +6,6 @@ import os
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # anchors defaults to the repo, the app runs from Source/ so CWD cannot be trusted
@@ -46,9 +45,6 @@ class AnalysisSettings(BaseSettings):
 
     # runs at most this many analyses at once, extra requests wait for a slot
     max_concurrent: int = 2
-
-    # names the build in every run file
-    tool_version: str = Field(default_factory=build_label)
 
 
 @lru_cache

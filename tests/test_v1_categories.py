@@ -22,6 +22,8 @@ CASES = {
     "tests/data.json": "IMPLEMENTATION",
     "tools/build.py": "IMPLEMENTATION",
     "setup.py": "IMPLEMENTATION",
+    "run.sh": "IMPLEMENTATION",
+    "scripts/deploy.sh": "IMPLEMENTATION",
     "Makefile": "OTHER",
     "README": "OTHER",
     "setup.cfg": "OTHER",

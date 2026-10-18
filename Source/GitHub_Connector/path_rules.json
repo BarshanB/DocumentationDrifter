@@ -7,7 +7,9 @@
     {"pattern": "*.txt", "category": "DOCUMENTATION"},
     {"pattern": "src/**", "category": "IMPLEMENTATION"},
     {"pattern": "tests/**", "category": "IMPLEMENTATION"},
-    {"pattern": "*.py", "category": "IMPLEMENTATION"}
+    {"pattern": "*.py", "category": "IMPLEMENTATION"},
+    {"pattern": "*.sh", "category": "IMPLEMENTATION"}
   ],
-  "fallback": "OTHER"
+  "fallback": "OTHER",
+  "unsupported": [".ai", ".html", ".lock", ".png", ".svg"]
 }

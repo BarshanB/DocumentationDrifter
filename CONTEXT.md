@@ -18,6 +18,10 @@ _Avoid_: phase (the course's Phases 3 to 5 are deadlines, not versions)
 The pod's live v1 service, whose output ours must match apart from the known differences.
 _Avoid_: their API, the pod (when the service is meant)
 
+**Known difference**:
+A named way our output may differ from the reference service's, agreed by Kaan and recorded in the decision log. It normally rests on an open question or a fault in the reference service.
+_Avoid_: exception, allowed diff, deviation
+
 ## Requests and runs
 
 **Analysis**:
@@ -43,15 +47,11 @@ _Avoid_: initial scan
 
 **Connector**:
 The code that reads the analysed repo with git: `fetch(repo, head, base)` returns a comparison, and it is the only code that runs git.
-_Avoid_: GitHub connector for the whole `GitHub_Connector` folder, which also holds the webhook receiver
+_Avoid_: GitHub connector for the whole `GitHub_Connector` folder, which also holds the API and the run store
 
 **Run store**:
 Where run files are saved and loaded by `analysis_id`: local disk in v1, a durable store from v3.
 _Avoid_: store (alone), database
-
-**Delivery store**:
-v0's SQLite table of webhook deliveries, deduped by delivery id. It holds no run files.
-_Avoid_: store (alone), event log
 
 ## Files
 
@@ -64,7 +64,7 @@ The kind of file a change touches, such as IMPLEMENTATION, DOCUMENTATION or OTHE
 _Avoid_: change category (in prose), file type
 
 **Skipped file**:
-A changed path that could not be checked, because it is binary, too large, not UTF-8 or over the doc budget, and is listed with a reason.
+A changed path that could not be checked, because its file type is unsupported, it is binary, too large or not UTF-8, or it is over the doc budget. It is listed in `skipped[]` with a reason code, and a changed one is still reported as a change.
 _Avoid_: unparsed, failed file
 
 **Doc budget** (from v1.2):
@@ -72,7 +72,7 @@ The most documentation text sent to the LLM in one analysis (200 KB, set in conf
 _Avoid_: doc limit, context cap
 
 **Ignored path**:
-A hidden path, symlink or submodule that is out of scope and not listed anywhere.
+A hidden path (any segment starting with `.`), symlink or submodule, which is out of scope and not listed anywhere.
 _Avoid_: excluded file (it suggests a skipped file)
 
 ## Findings (from v1.2)

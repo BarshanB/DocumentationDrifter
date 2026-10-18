@@ -168,12 +168,10 @@ def test_the_total_stays_the_same_across_sessions(api, v1_env):
 
 
 def test_only_the_v1_modules_are_counted():
-    # leaves out v0's webhook receiver, which the /system app never runs
     from GitHub_Connector import course
 
     names = {p.rsplit("/", 1)[-1].rsplit("\\", 1)[-1] for p in course.Statements(course.PACKAGE_DIR).files()}
     assert {"api.py", "analysis.py", "fetch.py"} <= names
-    assert not names & {"gitHook.py", "parse.py", "store.py", "models.py", "config.py", "git.py"}
     assert "course.py" not in names, "the course routes would count their own lines"
 
 

@@ -1,6 +1,6 @@
 # v1 models
 
-Five models of v1, the change detection API described in [docs/plan/roadmap.md](../../plan/roadmap.md) and [docs/plan/github-connector-steps.md](../../plan/github-connector-steps.md). They follow MAGE: each model starts from one engineering question and keeps only what that question needs. They narrow the Phase 2 models (M1 to M5 in [docs/endProduct/](../../endProduct/README.md)) to what v1 actually builds, and they use the terms in [CONTEXT.md](../../../CONTEXT.md).
+Five models of v1, the change detection API described in [docs/plan/roadmap.md](../../plan/roadmap.md) and [docs/plan/history/github-connector-steps.md](../../plan/history/github-connector-steps.md). They follow MAGE: each model starts from one engineering question and keeps only what that question needs. They narrow the Phase 2 models (M1 to M5 in [docs/endProduct/](../../endProduct/README.md)) to what v1 actually builds, and they use the terms in [CONTEXT.md](../../../CONTEXT.md).
 
 v1 now ships in two steps (decision log, 2026-10-17): **v1.1** is the git change detection, and **v1.2** adds an LLM that decides drift and fills `issues[]`. Parts that only v1.2 has are labelled v1.2 in the diagrams.
 
@@ -33,8 +33,7 @@ All v1 code goes in `Source/GitHub_Connector/`, in new modules beside the v0 fil
 | M1 LLM drift check (v1.2) | a new module behind one function, provider and model in config (name not fixed yet) |
 | M4 records | `schemas.py` |
 | Settings (limits, folders, remote base URL; not drawn in a model) | `settings.py` |
-| M1 Webhook receiver (dashed) | v0's `gitHook.py`, `parse.py`, `store.py`, `models.py` and `config.py`, which v1 neither serves nor imports |
 
 ## Source and pictures
 
-The Mermaid block in each `.md` file is the model, and GitHub renders it inline. The PNG pictures in [rendered/](rendered/) are generated from those blocks, so after editing a block, regenerate its PNG instead of editing the picture by hand: run `mmdc` from `@mermaid-js/mermaid-cli` on the block with a `.png` output, or paste the block into mermaid.live and export a PNG.
+The Mermaid block in each `.md` file is the model, and GitHub renders it inline. The PNG pictures in [rendered/](rendered/) are generated from those blocks (M4 has none: read it on GitHub, which draws its block), so after editing a block, regenerate its PNG instead of editing the picture by hand: run `mmdc` from `@mermaid-js/mermaid-cli` on the block with a `.png` output, or paste the block into mermaid.live and export a PNG.

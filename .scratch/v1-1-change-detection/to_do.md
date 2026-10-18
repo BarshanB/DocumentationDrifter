@@ -1,13 +1,12 @@
 # To do
 
-Items from the 2026-10-17 review of v1.1, left for later. Open questions for the pod are in the [decision log](docs/plan/decisions-2026-10-17.md) ("Still open"), and the remaining ticket work is in `.scratch/v1-1-change-detection/issues/`.
+Items from the 2026-10-17 review of v1.1, left for later. Open questions for the pod are in the [decision log](../../docs/plan/decisions-2026-10-17.md) ("Still open"), and the remaining ticket work is in `.scratch/v1-1-change-detection/issues/`.
 
-## Waiting for Kaan's decision
+## Decided, to build in tickets 12 and 16
 
-- **`tool_version` names the build** (review finding b). Every run reports `1.1.0`, so runs from different deploys can't be told apart (spec user story 6). Railway sets `RAILWAY_GIT_COMMIT_SHA` for deploys triggered from GitHub. Proposed fix: when it is set, report `1.1.0+<first 7 characters>`, and keep `1.1.0` locally. A test sets the variable and checks the result.
-
-- **Skipped files, skip reasons and hidden paths** (ticket 12 probes, 2026-10-17). The reference service keeps a skipped file in `changes[]` as well, skips by file type with the code `UNSUPPORTED_FILE_TYPE`, and lists hidden paths like `.github/`. Ours does none of these. Match, record as known differences, or ask the pod: details in the decision log, "Probed later the same day".
-- **The no-body setup message.** Ours says "body is required", the reference says " is required" (empty field name). Agree it as a known difference, or copy theirs.
+- **Match the reference on skipped files** (T12-Q1 and T12-Q2, ticket 16, built 2026-10-17). Left: republish the public test repo, and the live label run against the reference service. Keep skipped files in `changes[]`; add the extension denylist with `UNSUPPORTED_FILE_TYPE` ahead of the content checks, whose reasons become `BINARY_FILE`, `FILE_TOO_LARGE` and `NOT_UTF8`. Hidden paths stay ignored (T12-Q8, T12-Q9). The test repo's expected answers change, so it is republished. This also closes "the skip reason follows the size setting".
+- **`tool_version` names the build** (T12-Q5 in the decision log). Report `1.1.0+<first 7 characters of RAILWAY_GIT_COMMIT_SHA>` when it is set, `1.1.0` otherwise; add `tool_version` to `KNOWN_DIFFERENT_FIELDS`; a test sets the variable and checks the result.
+- **The no-body setup message** (T12-Q4). Ours stays "body is required", recorded as a known difference resting on a fault in the reference, and reported to the pod with T-04.
 
 ## Course routes, left for a complete solution
 
@@ -17,7 +16,6 @@ Items from the 2026-10-17 review of v1.1, left for later. Open questions for the
 
 ## Skipped for now
 
-- **The skip reason follows the size setting** (review finding c). The reason is fixed as "file larger than 1 MB", but `DRIFTER_MAX_FILE_BYTES` can change the limit, which would make the message wrong. Build the message from the setting, or stop making the limit configurable.
 - **Clone failures that aren't "not found"** (review finding e). Every failed clone becomes 404 `REPOSITORY_NOT_FOUND`, including a DNS failure, a GitHub outage or a full disk. A failed fetch by SHA becomes `COMMIT_NOT_FOUND`. Use the 404s only when git reports a missing repository or commit, and settle the code for every other failure together with the open "unexpected git failures" item in the decision log (ticket 12).
 
 ## Smaller tidy-ups the review suggested (optional)

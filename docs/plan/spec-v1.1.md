@@ -2,6 +2,8 @@
 
 Status: ready-for-agent · Written 2026-10-17 from the [roadmap](roadmap.md) v1 section and the [decision log](decisions-2026-10-17.md). Terms are as defined in [CONTEXT.md](../../CONTEXT.md).
 
+**Amended 2026-10-17 by the ticket 12 grilling** (decision log, T12-Q1 to T12-Q5). Where a story or decision below is marked *Amended*, the decision log wins: skipped files stay in `changes[]`, skips are by file type first with code reasons, and `tool_version` carries the build. Hidden paths stay ignored (T12-Q8, T12-Q9).
+
 ## Problem Statement
 
 The course tester and, later, a GitHub Action need to ask our service "what changed between these two commits of this public repo, and what kind of file is each change?" Today the repo has only the v0 webhook receiver, which records commit pairs and answers nothing. The reference service already answers this question with a fixed contract, and both teams are graded against the same tester. So any analysis we can't run, or any answer that differs from the reference service, is a failed test, and so is a failure that looks like a success.
@@ -36,15 +38,15 @@ A small FastAPI service under `/system` that matches the reference service's con
 22. As the course tester, I want each changed file listed once with ADDED, MODIFIED, DELETED or RENAMED, so that T-01, T-02, T-06 and T-07 pass.
 23. As the course tester, I want a rename reported as one RENAMED change with `old_path` set, not as a delete plus an add, so that T-03 passes.
 24. As a maintainer, I want renames detected at git's default 50% similarity and copies never reported, so that our output agrees with the reference service.
-25. As a caller, I want hidden paths (any segment starting with `.`), symlinks and submodules left out of `changes[]` entirely, so that tooling files like `.gitignore` and `.github/` never show up.
+25. As a caller, I want hidden paths (any segment starting with `.`) left out of `changes[]` entirely, so that tooling files like `.gitignore` and `.github/` never show up, and symlinks and submodules listed in `changes[]` and skipped as `UNSUPPORTED_FILE_TYPE`, since they are never read, as the reference does (T12-Q10, ticket 17). A switch between a regular file and a symlink or submodule is one TYPE_CHANGED change and isn't skipped.
 26. As a caller, I want a rename out of a hidden path reported as ADDED, and a rename into one as DELETED, so that a hidden path never appears, not even as `old_path`.
 27. As a caller, I want every change to have a category from the path rules, so that I can tell code changes from doc changes.
 28. As the course tester, I want `docs/**`, `*.md`, `*.rst` and `*.txt` classified as DOCUMENTATION, so that T-04 passes.
 29. As a maintainer, I want `requirements*.txt` classified as OTHER ahead of the `*.txt` rule, so that dependency lists aren't counted as docs.
-30. As a maintainer, I want `src/**`, `tests/**` and `*.py` classified as IMPLEMENTATION and everything else as OTHER, so that the first matching rule gives one clear answer.
+30. As a maintainer, I want `src/**`, `tests/**`, `*.py` and `*.sh` classified as IMPLEMENTATION and everything else as OTHER, so that the first matching rule gives one clear answer.
 31. As a maintainer, I want the path rules in one config file, and `config_version` to be a short hash of it, so that a change to the rules shows up in every run.
-32. As a caller, I want binary files and files over 1 MB listed in `skipped[]` with a reason, so that I know they weren't checked.
-33. As a caller, I want changed files that aren't valid UTF-8 listed in `skipped[]` with a reason, so that nothing unread is reported as checked.
+32. *Amended by T12-Q1 and T12-Q2: skipped files stay in `changes[]`, and reasons are codes.* As a caller, I want binary files and files over 1 MB listed in `skipped[]` with a reason, so that I know they weren't checked.
+33. *Amended by T12-Q2: reason code `NOT_UTF8`.* As a caller, I want changed files that aren't valid UTF-8 listed in `skipped[]` with a reason, so that nothing unread is reported as checked.
 34. As a caller, I want `changes[]` and `skipped[]` sorted by path, so that repeated runs compare cleanly.
 35. As the course tester, I want three identical requests to give results that differ only in `analysis_id` and `created_at`, so that AC-10 passes without its confidence clause.
 36. As the course tester, I want more than 300 changed files all returned, so that large commits aren't silently cut short.
@@ -83,8 +85,8 @@ A small FastAPI service under `/system` that matches the reference service's con
 - **Commit resolution.** The service fetches the head by SHA when it isn't in the clone, then runs `rev-parse --verify` to get the full SHA. The base is `base_commit` when given, otherwise the first parent, otherwise `null` for a root commit. Any base is accepted as given. A short SHA that can't be fetched or is ambiguous gives `COMMIT_NOT_FOUND`, with a message asking for the full SHA.
 - **Change listing.** The service runs `git diff --name-status -M` between base and head (or the empty tree for a first audit). It reports renames only, never copies. A rename is one RENAMED change with `old_path` set. There are no hunks and no `-U0`.
 - **Ignored paths.** Only regular files (modes 100644 and 100755) are kept, and any path with a segment starting with `.` is dropped. Each side of a rename is checked on its own, so a hidden `old_path` turns the change into ADDED and a hidden new path turns it into DELETED. `ls-tree` runs without `-l`.
-- **Skipped files.** These checks run only on changed paths, after one batched `--numstat` call fetches their blobs. A file is binary if git marks it `-` or its first 8 KB contain a NUL byte. Files over 1 MB and files that aren't valid UTF-8 are also skipped, each with a reason.
-- **Categories.** The first matching rule wins: `requirements*.txt` → OTHER; `docs/**`, `*.md`, `*.rst`, `*.txt` → DOCUMENTATION; `src/**`, `tests/**`, `*.py` → IMPLEMENTATION; everything else → OTHER. There are no DESIGN, ARCHITECTURE, SPECIFICATION or REQUIREMENT rules yet. Lockfiles are classified by path until the reference service says otherwise. `config_version` is a short hash of the rules file.
+- **Skipped files.** *Amended by T12-Q1 and T12-Q2: the extension denylist (`UNSUPPORTED_FILE_TYPE`) runs first, reasons are `BINARY_FILE`, `FILE_TOO_LARGE` and `NOT_UTF8`, and a skipped file stays in `changes[]`.* These checks run only on changed paths, after one batched `--numstat` call fetches their blobs. A file is binary if git marks it `-` or its first 8 KB contain a NUL byte. Files over 1 MB and files that aren't valid UTF-8 are also skipped, each with a reason.
+- **Categories.** The first matching rule wins: `requirements*.txt` → OTHER; `docs/**`, `*.md`, `*.rst`, `*.txt` → DOCUMENTATION; `src/**`, `tests/**`, `*.py`, `*.sh` → IMPLEMENTATION (`*.sh` from T12-Q11); everything else → OTHER. There are no DESIGN, ARCHITECTURE, SPECIFICATION or REQUIREMENT rules yet. Lockfiles are classified by path (OTHER) and also skipped as `UNSUPPORTED_FILE_TYPE` (T12-Q2). `config_version` is a short hash of the rules file.
 - **Run store.** It has `save(analysis_id, data)`, `load(analysis_id)` and `dump(result)`, the only serializer. Runs are written once to `runs/{analysis_id}.json` on local disk, and `runs/` is gitignored. `changes[]` and `skipped[]` are sorted by path before saving. Nothing is saved for a failed analysis.
 - **Limits.** Each git call times out after 60 s and the whole analysis after 120 s, both returning `TIMEOUT`. At most two analyses run at once, using a semaphore around `analyze()`. All three values are config.
 - **Hosting.** A Docker image with git installed runs uvicorn with `Source/` as the app directory. It is deployed to Railway's free plan (decision 8, 2026-10-17), and `GET /system/health` is the warm-up call and health check.
@@ -107,7 +109,7 @@ A small FastAPI service under `/system` that matches the reference service's con
   8. A binary, an oversize file and a non-UTF-8 file land in `skipped[]`.
   9. The fixture repo is byte-identical before and after a run.
   10. `.gitignore`, `.github/x.md` and `src/a.py` give only `src/a.py`.
-  11. A symlink is not listed.
+  11. A symlink is listed and skipped as `UNSUPPORTED_FILE_TYPE`, and a file-to-symlink switch is one TYPE_CHANGED change.
   12. A repo that doesn't exist gives REPOSITORY_NOT_FOUND.
 - **More cases:**
   - Renames across hidden paths.
@@ -141,7 +143,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 
 ## Further Notes
 
-- The reference service is the contract, so where the [connector guide](github-connector-steps.md) disagrees with it, the contract wins. That covers renames as one change, the code `REPOSITORY_NOT_FOUND`, and `TIMEOUT` as 500 with nothing saved.
+- The reference service is the contract, so where the [connector guide](history/github-connector-steps.md) disagrees with it, the contract wins. That covers renames as one change, the code `REPOSITORY_NOT_FOUND`, and `TIMEOUT` as 500 with nothing saved.
 - Tell the pod that their service returns OTHER for doc files and so fails T-04 as it stands.
 - Still open: how lockfiles are classified (roadmap decision 17) and what the `/test` endpoints should do (confirm with the pod before that work starts).
 - Free tier: runs vanish on spin-down and redeploy, so a `GET` after idle time can 404 on both teams' services.

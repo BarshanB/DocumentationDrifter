@@ -1,7 +1,10 @@
 # DocumentationDrifter
 A program to detect documentation drift in a GitHub repo. Designed for ECE30861 Class Project. 
 
-First Deliverable stage functions essentially as an LLM wrapper that tracks GitHub changes. Very rudimentary, perhaps we can begin to work on our mapping scheme.
+v1.1 is built: given a public repo and two commits, it lists every changed file with its change type and category. v1.2, an LLM that flags documentation the change may have outdated, is not started.
+
+**Start here:** [docs/README.md](docs/README.md) is the map of the documentation, with the order to read it in. The words used are defined in [CONTEXT.md](CONTEXT.md), the house rules are in [Skills/CLAUDE.md](Skills/CLAUDE.md), and the open review items are in [.scratch/v1-1-change-detection/to_do.md](.scratch/v1-1-change-detection/to_do.md).
+
 ## v1.1 change detection API
 
 `POST /system/analyze` takes `{"repository": "owner/name", "commit_id": "<7-40 hex>", "base_commit": "<optional>"}` and returns every changed file of a public GitHub repo with its change type and category. `GET /system/analysis/{analysis_id}` returns the saved run byte for byte. The contract matches the reference service; see `docs/plan/spec-v1.1.md`.

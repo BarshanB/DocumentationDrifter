@@ -1,1 +1,0 @@
-Directory for the models, will be sorted into subfolders for functionality. Agents will be harnessed and limited to only have access to global models & those of their respective focus area. 

@@ -17,10 +17,8 @@ COPY Source/ Source/
 RUN useradd --create-home --uid 10001 drifter && mkdir -p /app/runs && chown drifter /app/runs
 USER drifter
 
-# names the build in every run file, set at build time from the commit
-ARG TOOL_VERSION=1.1.0
-ENV DRIFTER_TOOL_VERSION=${TOOL_VERSION} \
-    DRIFTER_RUNS_DIR=/app/runs \
+# keeps run files where the drifter user can write, tool_version comes from RAILWAY_GIT_COMMIT_SHA at runtime
+ENV DRIFTER_RUNS_DIR=/app/runs \
     PYTHONUNBUFFERED=1
 
 # listens on the PORT the host sets (Railway does), 8000 when run locally

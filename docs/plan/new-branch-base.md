@@ -31,7 +31,7 @@ flowchart TD
   class ZERO fails
 ```
 
-Picture: [rendered/new-branch-schema-reading.png](rendered/new-branch-schema-reading.png).
+Picture: [new-branch-schema-reading.png](../Models/v1/v1.1/new-branch-schema-reading.png).
 
 Why it doesn't work:
 1. **The shared API can't ask for "no base" when the head has a parent.** Leaving `base_commit` out means "compare with the parent", and 40 zeros isn't a commit. Only a root commit can be a first audit.
@@ -58,9 +58,9 @@ flowchart TD
   class NEW works
 ```
 
-Picture: [rendered/new-branch-decision-15.png](rendered/new-branch-decision-15.png). The PNGs are generated from the Mermaid blocks with `mmdc`; regenerate them after editing a block.
+Picture: [new-branch-decision-15.png](../Models/v1/v1.1/new-branch-decision-15.png). The PNGs are generated from the Mermaid blocks with `mmdc`; regenerate them after editing a block.
 
-- The merge base comes from `merge_base_commit` in GitHub's compare endpoint, `GET /repos/{owner}/{repo}/compare/{default}...{head}`. The Action makes the same call for pull requests (decision 10) and force pushes, so this adds no new machinery. A sketch of the workflow is in [actions readiness](actions-readiness.md).
+- The merge base comes from `merge_base_commit` in GitHub's compare endpoint, `GET /repos/{owner}/{repo}/compare/{default}...{head}`. The Action makes the same call for pull requests (decision 10) and force pushes, so this adds no new machinery. A sketch of the workflow is in [actions readiness](reports/actions-readiness.md).
 - The v3 Action runs on pushes to the default branch and on pull requests. A push that creates a branch therefore reaches it only once: the push that creates the default branch in a new repo. There the merge base equals the head, so it is skipped. Feature branches are checked through their pull requests.
 - In v4, the webhook receives every push. This rule is what lets it check a new feature branch's own commits.
 
@@ -77,7 +77,7 @@ When the default branch is first created and its head is a root commit, the Acti
 ## Where it is recorded
 
 - [Roadmap](roadmap.md), decision 15 and v3 item 2
-- [Connector guide](github-connector-steps.md), step 3's base table
+- [Connector guide](history/github-connector-steps.md), step 3's base table
 - [CONTEXT.md](../../CONTEXT.md), "First audit"
 - [docs/Models/v1](../Models/v1/README.md): M3 (a first audit is a root commit) and M4 (`base_commit` is null only for a root commit)
 - v0's `parse.py`: the property is now `has_before`, renamed from `needs_base_snapshot`, and its comment and test follow this decision (2026-10-17)

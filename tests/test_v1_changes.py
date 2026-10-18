@@ -33,6 +33,11 @@ def listing(body):
     return [(c["path"], c["change_type"], c["old_path"]) for c in body["changes"]]
 
 
+def skipped(body):
+    # reduces skipped[] to (path, reason) pairs
+    return [(s["path"], s["reason"]) for s in body["skipped"]]
+
+
 TEXT = "".join(f"line {i}: the quick brown fox jumps over the lazy dog\n" for i in range(40))
 
 
@@ -102,18 +107,40 @@ def test_hidden_paths_are_ignored(api, make_repo):
 
 
 @pytest.mark.skipif(not SYMLINKS, reason="needs symlink support")
-def test_symlink_is_not_listed(api, make_repo):
+def test_symlink_is_listed_and_skipped(api, make_repo):
     repo = make_repo()
     repo.commit({"target.txt": "t\n"})
     head = repo.commit({"real.txt": "r\n"}, symlinks={"link.txt": "target.txt"})
-    assert listing(analyse(api, head)) == [("real.txt", "ADDED", None)]
+    body = analyse(api, head)
+    assert listing(body) == [("link.txt", "ADDED", None), ("real.txt", "ADDED", None)]
+    assert skipped(body) == [("link.txt", "UNSUPPORTED_FILE_TYPE")]
 
 
-def test_submodule_is_not_listed(api, make_repo):
+def test_submodule_is_listed_and_skipped(api, make_repo):
     repo = make_repo()
     repo.commit({"seed": "0\n"})
     head = repo.commit({"real.txt": "r\n"}, gitlinks={"vendor/lib": "1" * 40})
-    assert listing(analyse(api, head)) == [("real.txt", "ADDED", None)]
+    body = analyse(api, head)
+    assert listing(body) == [("real.txt", "ADDED", None), ("vendor/lib", "ADDED", None)]
+    assert skipped(body) == [("vendor/lib", "UNSUPPORTED_FILE_TYPE")]
+
+
+def test_submodule_bump_is_modified_and_skipped(api, make_repo):
+    repo = make_repo()
+    repo.commit({"seed": "0\n"}, gitlinks={"vendor/lib": "1" * 40})
+    head = repo.commit({}, gitlinks={"vendor/lib": "2" * 40})
+    body = analyse(api, head)
+    assert listing(body) == [("vendor/lib", "MODIFIED", None)]
+    assert skipped(body) == [("vendor/lib", "UNSUPPORTED_FILE_TYPE")]
+
+
+def test_hidden_submodule_stays_ignored(api, make_repo):
+    repo = make_repo()
+    repo.commit({"seed": "0\n"})
+    head = repo.commit({"real.txt": "r\n"}, gitlinks={".vendor/lib": "1" * 40})
+    body = analyse(api, head)
+    assert listing(body) == [("real.txt", "ADDED", None)]
+    assert skipped(body) == []
 
 
 def test_executable_file_is_kept(api, make_repo):
@@ -138,11 +165,28 @@ def test_rename_into_a_hidden_folder_is_deleted(api, make_repo):
 
 
 @pytest.mark.skipif(not SYMLINKS, reason="needs symlink support")
-def test_switch_between_file_and_symlink_never_lists_the_link_side(api, make_repo):
+def test_switch_between_file_and_symlink_is_type_changed_both_ways(api, make_repo):
     repo = make_repo()
     repo.commit({"target.txt": "t\n", "flip.txt": "regular\n"})
     to_link = repo.commit({}, symlinks={"flip.txt": "target.txt"})
     back = repo.commit({"flip.txt": "regular again\n"})
-    # lists nothing for file-to-link, only the regular file for link-to-file
-    assert listing(analyse(api, to_link)) == []
-    assert [c["path"] for c in analyse(api, back)["changes"]] == ["flip.txt"]
+    # lists one TYPE_CHANGED change either way, and skips neither
+    for head in (to_link, back):
+        body = analyse(api, head)
+        assert listing(body) == [("flip.txt", "TYPE_CHANGED", None)]
+        assert skipped(body) == []
+
+
+def test_switch_between_file_and_submodule_is_type_changed_both_ways(api, make_repo):
+    repo = make_repo()
+    repo.commit({"vendor/lib": "regular\n"})
+    repo.run("rm", "--quiet", "--cached", "vendor/lib")
+    (repo.work / "vendor/lib").unlink()
+    to_module = repo.commit({}, gitlinks={"vendor/lib": "1" * 40})
+    repo.run("rm", "--quiet", "--cached", "vendor/lib")
+    back = repo.commit({"vendor/lib": "regular again\n"})
+    # lists one TYPE_CHANGED change either way, and skips neither
+    for head in (to_module, back):
+        body = analyse(api, head)
+        assert listing(body) == [("vendor/lib", "TYPE_CHANGED", None)]
+        assert skipped(body) == []

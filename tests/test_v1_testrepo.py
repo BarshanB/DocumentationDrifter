@@ -75,10 +75,10 @@ def test_mixed_commit_reports_every_path_not_ignored(local_api, built):
     reported = {c["path"] for c in body["changes"]} | {c["old_path"] for c in body["changes"] if c["old_path"]}
     skipped = {s["path"] for s in body["skipped"]}
     assert skipped <= reported, "every skipped file is also a change"
-    for path, meta in touched.items():
-        old_mode, new_mode = meta[1:].split(" ")[:2]
-        ignored = any(p.startswith(".") for p in path.split("/")) or {old_mode, new_mode} & {"120000", "160000"}
-        assert bool(ignored) != (path in reported), f"{path}: ignored={bool(ignored)}, reported={path in reported}"
+    for path in touched:
+        # ignores hidden paths only, symlinks and submodules are reported too (ticket 17)
+        ignored = any(p.startswith(".") for p in path.split("/"))
+        assert ignored != (path in reported), f"{path}: ignored={ignored}, reported={path in reported}"
     assert ".assets/secret.png" in touched and ".assets/secret.png" not in reported | skipped
 
 

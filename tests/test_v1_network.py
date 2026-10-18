@@ -156,8 +156,7 @@ def test_conformance(case, target, github_env, live_reference, request):
     ours = target.request(method, "/system" + path, json=body)
     their = theirs(method, path, body)
     assert ours.status_code == their.status_code, f"{case}: status ours {ours.status_code}, theirs {their.status_code}"
-    ignored = reference.LINK_PATHS.get(case, ())
-    found = reference.differences(*reference.comparable(reference.normalise(ours.json()), reference.normalise(their.json()), ignored))
+    found = reference.differences(*reference.comparable(reference.normalise(ours.json()), reference.normalise(their.json())))
     allowed = reference.KNOWN_CASE_DIFFERENCES.get(case, ("",))[0]
     found = [f for f in found if not (allowed and f.startswith(allowed + ":"))]
     assert found == [], f"{case}: " + " | ".join(found)
@@ -217,16 +216,3 @@ def test_known_differences_by_choice_are_removed_before_comparing():
     assert reference.differences(*reference.comparable(ours, wrong)) == [
         "body.changes[3].change_type: ours 'ADDED', theirs 'MODIFIED'"
     ]
-
-
-def test_link_paths_waiting_for_ticket_17_are_removed_from_theirs_only():
-    ours = {"changes": [{"path": "notes.txt", "old_path": None, "change_type": "ADDED", "category": "DOCUMENTATION"}], "skipped": []}
-    theirs = {
-        "changes": [
-            {"path": "link-to-readme", "old_path": None, "change_type": "ADDED", "category": "OTHER"},
-            {"path": "notes.txt", "old_path": None, "change_type": "ADDED", "category": "OTHER"},
-        ],
-        "skipped": [{"path": "link-to-readme", "reason": "UNSUPPORTED_FILE_TYPE"}],
-    }
-    assert reference.differences(*reference.comparable(ours, theirs)) != []
-    assert reference.differences(*reference.comparable(ours, theirs, ignored_paths={"link-to-readme"})) == []

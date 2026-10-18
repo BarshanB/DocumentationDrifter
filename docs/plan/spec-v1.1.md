@@ -38,7 +38,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 22. As the course tester, I want each changed file listed once with ADDED, MODIFIED, DELETED or RENAMED, so that T-01, T-02, T-06 and T-07 pass.
 23. As the course tester, I want a rename reported as one RENAMED change with `old_path` set, not as a delete plus an add, so that T-03 passes.
 24. As a maintainer, I want renames detected at git's default 50% similarity and copies never reported, so that our output agrees with the reference service.
-25. As a caller, I want hidden paths (any segment starting with `.`), symlinks and submodules left out of `changes[]` entirely, so that tooling files like `.gitignore` and `.github/` never show up. (Symlinks and submodules change with ticket 17: listed in `changes[]` and skipped, as the reference does, T12-Q10.)
+25. As a caller, I want hidden paths (any segment starting with `.`) left out of `changes[]` entirely, so that tooling files like `.gitignore` and `.github/` never show up, and symlinks and submodules listed in `changes[]` and skipped as `UNSUPPORTED_FILE_TYPE`, since they are never read, as the reference does (T12-Q10, ticket 17). A switch between a regular file and a symlink or submodule is one TYPE_CHANGED change and isn't skipped.
 26. As a caller, I want a rename out of a hidden path reported as ADDED, and a rename into one as DELETED, so that a hidden path never appears, not even as `old_path`.
 27. As a caller, I want every change to have a category from the path rules, so that I can tell code changes from doc changes.
 28. As the course tester, I want `docs/**`, `*.md`, `*.rst` and `*.txt` classified as DOCUMENTATION, so that T-04 passes.
@@ -109,7 +109,7 @@ A small FastAPI service under `/system` that matches the reference service's con
   8. A binary, an oversize file and a non-UTF-8 file land in `skipped[]`.
   9. The fixture repo is byte-identical before and after a run.
   10. `.gitignore`, `.github/x.md` and `src/a.py` give only `src/a.py`.
-  11. A symlink is not listed.
+  11. A symlink is listed and skipped as `UNSUPPORTED_FILE_TYPE`, and a file-to-symlink switch is one TYPE_CHANGED change.
   12. A repo that doesn't exist gives REPOSITORY_NOT_FOUND.
 - **More cases:**
   - Renames across hidden paths.

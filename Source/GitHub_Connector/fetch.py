@@ -27,8 +27,11 @@ _STATUS = {
     "T": ChangeType.TYPE_CHANGED,
 }
 
-# keeps plain and executable files, drops symlinks (120000) and submodules (160000)
+# keeps plain and executable files, the only ones read as text
 REGULAR = {"100644", "100755"}
+
+# lists symlinks and submodules in changes[] and skips them unread, as the reference does (decision T12-Q10)
+LINKS = {"120000", "160000"}
 
 # names each skip reason as a code, in the reference service's style (decision T12-Q2)
 SKIP_UNSUPPORTED = "UNSUPPORTED_FILE_TYPE"
@@ -44,6 +47,7 @@ class FileChange:
     change_type: ChangeType
     old_path: str | None = None
     blob: str = ""  # holds the blob checked, base side for a deletion
+    link: bool = False  # marks a symlink or submodule on the side checked, never read
 
 
 @dataclass(frozen=True)
@@ -265,7 +269,17 @@ def _first_parent(git: _Git, head: str) -> str | None:
 
 def kept(path: str, mode: str) -> bool:
     # admits a regular file with no hidden segment, everything else is an ignored path
-    return mode in REGULAR and not any(part.startswith(".") for part in path.split("/"))
+    return mode in REGULAR and not _hidden(path)
+
+
+def listed(path: str, mode: str) -> bool:
+    # admits a changed path for changes[], a kept file or a symlink or submodule with no hidden segment
+    return (mode in REGULAR or mode in LINKS) and not _hidden(path)
+
+
+def _hidden(path: str) -> bool:
+    # tells a hidden path, any segment starting with a dot
+    return any(part.startswith(".") for part in path.split("/"))
 
 
 def _diff(git: _Git, old: str, head: str) -> list[FileChange]:
@@ -282,29 +296,38 @@ def _diff(git: _Git, old: str, head: str) -> list[FileChange]:
             old_path, new_path = fields[i + 1], fields[i + 2]
             i += 3
             # checks each side on its own, so an ignored path never shows, not even as old_path
-            old_ok, new_ok = kept(old_path, old_mode), kept(new_path, new_mode)
+            old_ok, new_ok = listed(old_path, old_mode), listed(new_path, new_mode)
             if old_ok and new_ok:
-                changes.append(FileChange(new_path, ChangeType.RENAMED, old_path, new_blob))
+                changes.append(FileChange(new_path, ChangeType.RENAMED, old_path, new_blob, new_mode in LINKS))
             elif new_ok:
-                changes.append(FileChange(new_path, ChangeType.ADDED, blob=new_blob))
+                changes.append(FileChange(new_path, ChangeType.ADDED, blob=new_blob, link=new_mode in LINKS))
             elif old_ok:
-                changes.append(FileChange(old_path, ChangeType.DELETED, blob=old_blob))
+                changes.append(FileChange(old_path, ChangeType.DELETED, blob=old_blob, link=old_mode in LINKS))
             continue
         path = fields[i + 1]
         i += 2
         # judges the head side, or the base side for a deletion
         if letter == "D":
-            if kept(path, old_mode):
-                changes.append(FileChange(path, ChangeType.DELETED, blob=old_blob))
-        elif kept(path, new_mode):
-            changes.append(FileChange(path, _STATUS[letter], blob=new_blob))
+            if listed(path, old_mode):
+                changes.append(FileChange(path, ChangeType.DELETED, blob=old_blob, link=old_mode in LINKS))
+        elif listed(path, new_mode):
+            changes.append(FileChange(path, _STATUS[letter], blob=new_blob, link=new_mode in LINKS))
     return changes
 
 
 def _skipped(git: _Git, old: str, head: str, changes: list[FileChange]) -> list[SkippedFile]:
     # lists the changes that can't be read as text, file type first, then binary, size and UTF-8
-    skipped = [SkippedFile(c.path, SKIP_UNSUPPORTED) for c in changes if rules.is_unsupported(c.path)]
-    rest = [c for c in changes if not rules.is_unsupported(c.path)]
+    skipped: list[SkippedFile] = []
+    rest: list[FileChange] = []
+    for c in changes:
+        if c.link:
+            # skips a symlink or submodule unread, but a switch to or from one isn't skipped
+            if c.change_type != ChangeType.TYPE_CHANGED:
+                skipped.append(SkippedFile(c.path, SKIP_UNSUPPORTED))
+        elif rules.is_unsupported(c.path):
+            skipped.append(SkippedFile(c.path, SKIP_UNSUPPORTED))
+        else:
+            rest.append(c)
     if not rest:
         return skipped
     binary = _numstat_binaries(git, old, head)

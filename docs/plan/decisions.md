@@ -244,6 +244,17 @@ When the default branch is first created and its head is a root commit, the Acti
 - [docs/Models/v1](../Models/v1/README.md): M3 (a first audit is a root commit) and M4 (`base_commit` is null only for a root commit)
 - v0's `parse.py`: the property is now `has_before`, renamed from `needs_base_snapshot`, and its comment and test follow this decision (2026-10-17)
 
+## A basic UI in v1, served at `/`, 2026-10-18
+
+Grilled with Kaan before v1.2, so the backend can be used by hand first (ticket 18).
+
+- **In v1, not v2 (Kaan).** The roadmap left a UI out of v1, and v2 item 5 offered a viewer only if the course required one. The console in `Source/Frontend/` already calls only `POST /system/analyze` and `GET /system/analysis/{id}`, so it works against v1.1 unchanged and shows v1.2's `issues[]` without more work.
+- **Served by the v1 app at `/` (Q1, Q5).** One URL for the team and nothing else to host. The route sits outside `/system` and is left out of the OpenAPI document, so the contract and conformance don't change. A separate host would need CORS; local-only would help no one else.
+- **The page is unchanged (Q2, Q6, Q8).** It analyses and looks up runs, and keeps its repo watching, its API address field and `?demo`. It doesn't call the course routes.
+- **`ui.py` stays (Q7)** as the way to run the console against an API elsewhere.
+- **Done means (Q4, Q10, Q11):** pytest tests at the HTTP app, a local run against the ticket 11 test repo, and the same run on Railway after Kaan says push.
+- **Left for a complete solution (Q12):** each viewer's browser polls GitHub on its own unauthenticated budget of 60 calls an hour. At the default 300 s that is about 5 watched repos; past it the page pauses until the reset. Noted in `.scratch/v1-1-change-detection/to_do.md`.
+
 ## Still open
 
 - ~~**Skipped files, skip reasons and hidden paths**~~: decided that evening (T12-Q1, T12-Q2, T12-Q8 and T12-Q9). Still to ask the pod: their full list of unsupported file types, and whether they ever skip by content.

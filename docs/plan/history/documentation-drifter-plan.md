@@ -1,8 +1,10 @@
 # DocumentationDrifter: the end product and where each part lands
 
-The Phase 2 spec ([docs/endProduct/](../endProduct/README.md), the pod's specification) and schema v14 ([pdf](../endProduct/documentation-tracker-schema-v14.pdf)) describe the **end product**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it.
+> **History, superseded.** Kept for the reasoning behind v1.1. The current plan is the [roadmap](../roadmap.md), the [v1.1 spec](../spec-v1.1.md) and the [decision log](../decisions-2026-10-17.md); where this file disagrees with them, they win.
 
-**Inspiration, not a blueprint.** The versions take ideas from the end product but don't have to match it exactly. Building iteratively means each version can simplify, reorder or drop parts of it as the team learns, and section 2 lists where that has already happened. When a version is meant to build part of the end product, the roadmap names the version (v1.1, v1.2, v2 and so on); anything not named there is not yet planned. The [roadmap](roadmap.md) is the plan to follow; the [decision log](decisions-2026-10-17.md) has the reasons. Terms are as in [CONTEXT.md](../../CONTEXT.md).
+The Phase 2 spec ([docs/endProduct/](../../endProduct/README.md), the pod's specification) and schema v14 ([pdf](../../endProduct/documentation-tracker-schema-v14.pdf)) describe the **end product**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it.
+
+**Inspiration, not a blueprint.** The versions take ideas from the end product but don't have to match it exactly. Building iteratively means each version can simplify, reorder or drop parts of it as the team learns, and section 2 lists where that has already happened. When a version is meant to build part of the end product, the roadmap names the version (v1.1, v1.2, v2 and so on); anything not named there is not yet planned. The [roadmap](../roadmap.md) is the plan to follow; the [decision log](../decisions-2026-10-17.md) has the reasons. Terms are as in [CONTEXT.md](../../../CONTEXT.md).
 
 Revised 2026-10-17 to match the decisions and the v1.1 build. The first version of this file was a snapshot of `main` at `5b74560`.
 
@@ -22,15 +24,15 @@ A read-only service, called by a GitHub Action on every push and pull request, t
 | Failed analyses saved as HTTP 200 with status ERROR (M2) | 400, 404 or 500 with an `ErrorBody`, nothing saved | Decision 13; matches the reference service |
 | Error codes `REPO_NOT_FOUND`, `REPO_NOT_ACCESSIBLE`, `INVALID_CONFIG`, `CHECKS_SKIPPED`, `DETECTOR_ERROR` | The contract's codes: `INVALID_REQUEST`, `REPOSITORY_NOT_FOUND`, `COMMIT_NOT_FOUND`, `TIMEOUT`, `WRITE_FAILED`; `LLM_UNAVAILABLE` from v1.2; `INVALID_CONFIG` returns with the mapping file | Reference service; Q16 |
 | `POST /analyze`, `GET /analysis/{id}` | The same under `/system`, plus `GET /system/health` | Reference service |
-| Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, [`WebHookConnectors.png`](../endProduct/WebHookConnectors.png)) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
+| Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, [`WebHookConnectors.png`](../../endProduct/WebHookConnectors.png)) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
 | A documentation viewer in Phase 3 (§6.1) | A minimal read-only viewer in **v3**, only if the course still requires it | Roadmap v3 item 5 |
 | User notifications in Phase 5 | **v4**; the end product's §6.4 names them as the first thing to cut | Roadmap v4 |
-| The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15 ([graphs](new-branch-base.md)), guide step 3 |
+| The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15 ([graphs](../new-branch-base.md)), guide step 3 |
 | Mapping file `.doctracker.yml` | `doctracker.yml`, because the hidden-path rule would drop a dot-file | Guide step 4 |
 
 ## 3. Phase 2's review notes and how they were settled
 
-The review notes at the end of [endProduct.txt](../endProduct/endProduct.txt) list twelve inconsistencies to fix before the next phase.
+The review notes at the end of [endProduct.txt](../../endProduct/endProduct.txt) list twelve inconsistencies to fix before the next phase.
 
 | # | Note | Settled as |
 |---|---|---|
@@ -38,7 +40,7 @@ The review notes at the end of [endProduct.txt](../endProduct/endProduct.txt) li
 | 2 | Human review mandatory (REQ-03) or selectable (§7.2)? | Mandatory: every finding is `PENDING_REVIEW` (roadmap goal 3). Recording decisions comes in v3. |
 | 3 | Read-only scope, yet the architecture edits docs | Read-only. The tool never edits the repo or its docs (goal 3, REQ-06). |
 | 4 | HTTP 200 with ERROR, or 404 and 500? | 400, 404 or 500 with nothing saved (decision 13). |
-| 5 | Examples use `sample-credit-project` and 6-character SHAs | `owner/name`, 7–40 hex in, 40 hex out, and `config_version` always present ([spec](spec-v1.1.md)). |
+| 5 | Examples use `sample-credit-project` and 6-character SHAs | `owner/name`, 7–40 hex in, 40 hex out, and `config_version` always present ([spec](../spec-v1.1.md)). |
 | 6 | Confidence and repeatability | No confidence field (decision 5). v1.1 is exact; from v1.2 `changes[]` stays exact and `issues[]` is checked by shape. |
 | 7 | Is a mapping required, and in what format? | Not before v1.3 or v2. Its name and format are open (roadmap decision 6). |
 | 8 | Reliability measured before the mapping exists | The reliability run moves to v2, on the public test repo (ticket 11). |

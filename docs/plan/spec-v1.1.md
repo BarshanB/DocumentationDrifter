@@ -143,7 +143,7 @@ A small FastAPI service under `/system` that matches the reference service's con
 
 ## Further Notes
 
-- The reference service is the contract, so where the [connector guide](github-connector-steps.md) disagrees with it, the contract wins. That covers renames as one change, the code `REPOSITORY_NOT_FOUND`, and `TIMEOUT` as 500 with nothing saved.
+- The reference service is the contract, so where the [connector guide](history/github-connector-steps.md) disagrees with it, the contract wins. That covers renames as one change, the code `REPOSITORY_NOT_FOUND`, and `TIMEOUT` as 500 with nothing saved.
 - Tell the pod that their service returns OTHER for doc files and so fails T-04 as it stands.
 - Still open: how lockfiles are classified (roadmap decision 17) and what the `/test` endpoints should do (confirm with the pod before that work starts).
 - Free tier: runs vanish on spin-down and redeploy, so a `GET` after idle time can 404 on both teams' services.

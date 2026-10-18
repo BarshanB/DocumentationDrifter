@@ -1,6 +1,6 @@
 # MAGE modeling: what the v1 models follow
 
-Notes for the [v1 models](../Models/v1/README.md), written 2026-10-17. Every claim below comes from the MAGE source repository, `github.com/davisjam/model-based-agentic-software-engineering` (the source of the book linked in the course), at its default branch on that date. Paths are relative to that repo.
+Notes for the [v1 models](../../Models/v1/README.md), written 2026-10-17. Every claim below comes from the MAGE source repository, `github.com/davisjam/model-based-agentic-software-engineering` (the source of the book linked in the course), at its default branch on that date. Paths are relative to that repo.
 
 ## How MAGE says to model
 

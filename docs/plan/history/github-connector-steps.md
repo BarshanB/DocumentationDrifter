@@ -1,10 +1,12 @@
 # GitHub connector, step by step
 
+> **History, superseded.** Kept for the reasoning behind v1.1. The current plan is the [roadmap](../roadmap.md), the [v1.1 spec](../spec-v1.1.md) and the [decision log](../decisions-2026-10-17.md); where this file disagrees with them, they win.
+
 How to build the piece that connects to a **public GitHub repo**, gets the **base and head commit ids**, and reads **all source code and documentation** at both commits, skipping hidden files such as `.gitignore`.
 
-**Spec sources used.** The project's specification is the Phase 2 spec, now kept as text in [docs/endProduct/](../endProduct/README.md). This guide treats it as "the provided file". The repo's `docs/endProduct/documentation-tracker-schema-v14.pdf` (schema v14) adds the Snapshot model on top of it. Section numbers below refer to these two. This guide follows the same design as the [commit fetcher plan](commit-fetcher-plan.md): git first, REST as a fallback, and the same `fetch()` → `Comparison` interface. It adds the hidden-file rule and spells out where the commit ids come from. Nothing was changed in the repo.
+**Spec sources used.** The project's specification is the Phase 2 spec, now kept as text in [docs/endProduct/](../../endProduct/README.md). This guide treats it as "the provided file". The repo's `docs/endProduct/documentation-tracker-schema-v14.pdf` (schema v14) adds the Snapshot model on top of it. Section numbers below refer to these two. This guide follows the same design as the [commit fetcher plan](commit-fetcher-plan.md): git first, REST as a fallback, and the same `fetch()` → `Comparison` interface. It adds the hidden-file rule and spells out where the commit ids come from. Nothing was changed in the repo.
 
-> **Updated 2026-10-17.** The pod's live service (`doc-tracker-5t4s.onrender.com/system`) now fixes the shared contract. Changes are marked *Contract:* or *Decided:* below. The contract makes renames one `RENAMED` change, a missing or private repo `REPOSITORY_NOT_FOUND`, and `TIMEOUT` a 500; the M0 build order adds `src/**` and `tests/**` as IMPLEMENTATION. Kaan has also decided on `requirements*.txt` → OTHER. The [roadmap](roadmap.md) builds v1 from this guide, slice by slice. A second update the same day ([actions readiness](actions-readiness.md)) changed step 3 for the v3 GitHub Action, dropped `-l` from step 4 and made `fetch()` a context manager in step 8.
+> **Updated 2026-10-17.** The pod's live service (`doc-tracker-5t4s.onrender.com/system`) now fixes the shared contract. Changes are marked *Contract:* or *Decided:* below. The contract makes renames one `RENAMED` change, a missing or private repo `REPOSITORY_NOT_FOUND`, and `TIMEOUT` a 500; the M0 build order adds `src/**` and `tests/**` as IMPLEMENTATION. Kaan has also decided on `requirements*.txt` → OTHER. The [roadmap](../roadmap.md) builds v1 from this guide, slice by slice. A second update the same day ([actions readiness](../reports/actions-readiness.md)) changed step 3 for the v3 GitHub Action, dropped `-l` from step 4 and made `fetch()` a context manager in step 8.
 
 The git commands below were checked on 2026-10-16 against `psf/requests`. A blobless clone took about 1.2 s. At one commit, `ls-tree` listed 130 files, 26 of them hidden, which left 104 to analyse.
 
@@ -65,7 +67,7 @@ GitHub lets a client fetch any reachable SHA by its full id (tested). A short SH
 | Direct API call, no `base_commit` | **first parent** of head | `git rev-parse {head}^` |
 | GitHub Action on `pull_request` | merge base of the PR base and head | `github.event.pull_request.base.sha`, with head = `github.event.pull_request.head.sha`. *Recommended (roadmap decision 10, to agree with the pod):* the v3 Action sends the merge base, read from `merge_base_commit` in GitHub's compare endpoint, so it needs no checkout (see below) |
 | GitHub Action on `push` | the commit before the push | `github.event.before`, with head = `github.event.after`. After a force push, the merge base of the two |
-| GitHub Action on `push` of a new branch, `before` = `0000…0000` | merge base of the default branch and head; the Action skips the push if that equals the head, which happens when the default branch itself is created | compare endpoint. *Decided:* not a first audit, because the contract can't ask for one for a head that isn't a root commit, and it would list the whole repo as added (roadmap decision 15) ([decision 15](new-branch-base.md)) |
+| GitHub Action on `push` of a new branch, `before` = `0000…0000` | merge base of the default branch and head; the Action skips the push if that equals the head, which happens when the default branch itself is created | compare endpoint. *Decided:* not a first audit, because the contract can't ask for one for a head that isn't a root commit, and it would list the whole repo as added (roadmap decision 15) ([decision 15](../new-branch-base.md)) |
 | Root commit | none | `base_commit: null`. Schema v14 calls this a *"first audit"*: resolution checks only, and every file counts as added. |
 
 Two details to get right:
@@ -75,7 +77,7 @@ Two details to get right:
 
 Store both ids as full 40-hex SHAs in the run file (`head_commit`, `base_commit`). This keeps runs repeatable (REQ-07).
 
-REST equivalents (from the [API notes](../../../github-api/base-head-endpoints.md)): `GET /repos/{o}/{r}/commits/{ref}` returns `sha` and `parents[0].sha`. An unknown SHA there returns 422.
+REST equivalents (from the [API notes](../../../../github-api/base-head-endpoints.md)): `GET /repos/{o}/{r}/commits/{ref}` returns `sha` and `parents[0].sha`. An unknown SHA there returns 422.
 
 ## Step 4: List every file at each commit, minus hidden ones
 

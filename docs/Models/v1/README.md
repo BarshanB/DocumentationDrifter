@@ -33,7 +33,6 @@ All v1 code goes in `Source/GitHub_Connector/`, in new modules beside the v0 fil
 | M1 LLM drift check (v1.2) | a new module behind one function, provider and model in config (name not fixed yet) |
 | M4 records | `schemas.py` |
 | Settings (limits, folders, remote base URL; not drawn in a model) | `settings.py` |
-| M1 Webhook receiver (dashed) | v0's `gitHook.py`, `parse.py`, `store.py`, `models.py` and `config.py`, which v1 neither serves nor imports |
 
 ## Source and pictures
 

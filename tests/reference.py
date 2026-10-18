@@ -6,6 +6,7 @@ import json
 import os
 import sys
 import time
+from collections.abc import Container
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ KNOWN_SCHEMA_EXTRAS = {"DOCUMENTATION"}
 # allows a named difference in one case, each agreed by Kaan
 KNOWN_CASE_DIFFERENCES = {
     "unfetchable-short-sha": ("body.message", "decision Q6: ours asks for the full 40-character SHA, 2026-10-17"),
+    "course-setup-no-body": ("body.message", "decision T12-Q4: theirs says ' is required' with no field name, a fault, 2026-10-17"),
 }
 
 
@@ -63,6 +65,14 @@ def normalise(body: Any) -> Any:
     return body
 
 
+# names the symlinks and submodules we still ignore, which theirs lists, per label until ticket 17 (decision T12-Q10)
+LINK_PATHS = {
+    "label-symlink": {"link-to-readme"},
+    "label-file-to-symlink": {"switchy.txt"},
+    "label-submodule": {"vendor/lib"},
+    "label-mixed": {"mixlink", "vendor/other"},
+}
+
 # names the skip reasons only our safety net gives, theirs skips by file type alone (decision T12-Q2)
 OUR_EXTRA_SKIP_REASONS = {"BINARY_FILE", "FILE_TOO_LARGE", "NOT_UTF8"}
 
@@ -86,13 +96,13 @@ def _without_hidden(change: dict) -> dict | None:
     return change
 
 
-def comparable(ours: Any, theirs: Any) -> tuple[Any, Any]:
-    # removes the known differences by choice: our extra skip reasons and their hidden paths
+def comparable(ours: Any, theirs: Any, ignored_paths: Container[str] = ()) -> tuple[Any, Any]:
+    # removes the known differences by choice: our extra skip reasons, their hidden paths and their ignored_paths
     if not (isinstance(ours, dict) and isinstance(theirs, dict) and "changes" in theirs):
         return ours, theirs
     ours = {**ours, "skipped": [s for s in ours.get("skipped", []) if s["reason"] not in OUR_EXTRA_SKIP_REASONS]}
-    changes = [c for c in map(_without_hidden, theirs["changes"]) if c is not None]
-    skipped = [s for s in theirs.get("skipped", []) if not _hidden(s["path"])]
+    changes = [c for c in map(_without_hidden, theirs["changes"]) if c is not None and c["path"] not in ignored_paths]
+    skipped = [s for s in theirs.get("skipped", []) if not _hidden(s["path"]) and s["path"] not in ignored_paths]
     return ours, {**theirs, "changes": sorted(changes, key=lambda c: c["path"]), "skipped": skipped}
 
 

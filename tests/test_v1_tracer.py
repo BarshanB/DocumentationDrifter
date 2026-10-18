@@ -2,8 +2,6 @@
 
 import json
 import re
-import subprocess
-import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +95,19 @@ def test_three_identical_requests_differ_only_in_id_and_time(api, make_repo):
     assert len({b["analysis_id"] for b in bodies}) == 3
 
 
+def test_tool_version_names_the_railway_build(api, make_repo, monkeypatch):
+    # adds the deploy's short commit to the version, decision T12-Q5
+    from GitHub_Connector.settings import get_settings
+
+    _, _, head = two_commits(make_repo)
+    monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
+    get_settings.cache_clear()
+    assert analyse(api, head).json()["tool_version"] == "1.1.0"
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", "abcdef0123456789abcdef0123456789abcdef01")
+    get_settings.cache_clear()
+    assert analyse(api, head).json()["tool_version"] == "1.1.0+abcdef0"
+
+
 def test_missing_repository_is_refused_and_nothing_saved(api, v1_env):
     r = analyse(api, "a" * 40, repo="octo/nothing-here")
     assert r.status_code == 404
@@ -150,15 +161,6 @@ def test_openapi_lives_under_system_and_has_no_webhook_route(api):
     doc = api.get("/system/openapi.json").json()
     assert all(p.startswith("/system/") for p in doc["paths"])
     assert not any("hooks" in p for p in doc["paths"])
-
-
-def test_importing_the_v1_app_never_imports_v0():
-    probe = (
-        "import sys; sys.path.insert(0, %r); import GitHub_Connector.api; "
-        "print('GitHub_Connector.gitHook' in sys.modules)"
-    ) % str(REPO_ROOT / "Source")
-    out = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=True)
-    assert out.stdout.strip() == "False"
 
 
 def test_analyze_works_without_http(api, make_repo):

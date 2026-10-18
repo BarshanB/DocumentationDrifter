@@ -1,15 +1,24 @@
-# holds v1 runtime settings, kept apart from v0's config so neither disturbs the other
+# holds v1 runtime settings
 
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # anchors defaults to the repo, the app runs from Source/ so CWD cannot be trusted
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PACKAGE_DIR = Path(__file__).resolve().parent
+VERSION = "1.1.0"
+
+
+def build_label() -> str:
+    # adds the deploy's short commit, so a run says which build produced it (decision T12-Q5)
+    sha = os.environ.get("RAILWAY_GIT_COMMIT_SHA", "")
+    return f"{VERSION}+{sha[:7]}" if sha else VERSION
 
 
 class AnalysisSettings(BaseSettings):
@@ -39,7 +48,7 @@ class AnalysisSettings(BaseSettings):
     max_concurrent: int = 2
 
     # names the build in every run file
-    tool_version: str = "1.1.0"
+    tool_version: str = Field(default_factory=build_label)
 
 
 @lru_cache

@@ -47,15 +47,11 @@ _Avoid_: initial scan
 
 **Connector**:
 The code that reads the analysed repo with git: `fetch(repo, head, base)` returns a comparison, and it is the only code that runs git.
-_Avoid_: GitHub connector for the whole `GitHub_Connector` folder, which also holds the webhook receiver
+_Avoid_: GitHub connector for the whole `GitHub_Connector` folder, which also holds the API and the run store
 
 **Run store**:
 Where run files are saved and loaded by `analysis_id`: local disk in v1, a durable store from v3.
 _Avoid_: store (alone), database
-
-**Delivery store**:
-v0's SQLite table of webhook deliveries, deduped by delivery id. It holds no run files.
-_Avoid_: store (alone), event log
 
 ## Files
 

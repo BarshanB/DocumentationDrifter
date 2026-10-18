@@ -19,7 +19,7 @@ flowchart TD
   R1 -->|"yes"| OTH["OTHER"]
   R1 -->|"no"| R2{"docs/** · *.md · *.rst · *.txt?"}
   R2 -->|"yes"| DOC["DOCUMENTATION"]
-  R2 -->|"no"| R3{"src/** · tests/** · *.py?"}
+  R2 -->|"no"| R3{"src/** · tests/** · *.py · *.sh?"}
   R3 -->|"yes"| IMP["IMPLEMENTATION"]
   R3 -->|"no"| OTH2["OTHER"]
   DOC --> CH["changes[] entry · REQ-01"]

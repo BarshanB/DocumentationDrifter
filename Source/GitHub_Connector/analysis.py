@@ -1,4 +1,4 @@
-# runs one analysis end to end, callable without HTTP by the API, a later Action or the webhook
+# runs one analysis end to end, callable without HTTP by the API or a later Action
 
 from __future__ import annotations
 

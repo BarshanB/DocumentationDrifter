@@ -16,9 +16,8 @@ from pydantic import BaseModel, Field
 
 PACKAGE = "GitHub_Connector"
 PACKAGE_DIR = Path(__file__).resolve().parent
-# leaves out v0's webhook receiver files, which share the package but never run in the /system app,
-# and this file, so a report never counts the lines that build it (a new v0 file must be added here)
-UNCOUNTED = frozenset({"config.py", "git.py", "gitHook.py", "models.py", "parse.py", "store.py", "course.py"})
+# leaves out this file, so a report never counts the lines that build it
+UNCOUNTED = frozenset({"course.py"})
 
 # words the report's basis, the reference service's sentence with our package and method
 BASIS = (

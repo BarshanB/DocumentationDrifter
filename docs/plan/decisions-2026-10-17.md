@@ -142,9 +142,29 @@ Kaan settled the three ticket 12 differences and two smaller items. Each entry g
 **Answer:** Parked for the v1.2 grilling, and listed as an open point in the roadmap's v1.2 section.
 **Why:** Neither changes v1.1.
 
+## Ticket 12 live run, the same night
+
+The whole conformance set, with the 23 test-repo labels (DRIFTER_LABEL_CONFORMANCE=1), ran from Kaan's machine against the reference service. psf/requests d568f47 and every other real-repo and error case matched; four labels didn't, for the two reasons below. A setup with no body joined the set as the `course-setup-no-body` case, with its message as a known difference (T12-Q4); the reference answers `{"message": " is required", "source": "system"}`.
+
+**T12-Q10 · Symlinks and submodules.** The reference lists a new symlink (`link-to-readme`, `mixlink`) or submodule (`vendor/lib`, `vendor/other`) in `changes[]` as ADDED and OTHER, and skips it as `UNSUPPORTED_FILE_TYPE`. A file-to-symlink switch is one TYPE_CHANGED change and is not skipped. Ours ignores all of these. Match?
+**Answer:** Yes, in ticket 17, since it needs more than a small fix (the connector, the test repo's labels, M3 and a republish). Until then the paths are listed per label in `LINK_PATHS` in `tests/reference.py` and removed from the reference's answer before comparing.
+**Why:** Like a skipped file (T12-Q1), a symlink or submodule is a path git saw change, and the course spec doesn't ask us to hide it.
+
+**T12-Q11 · Shell scripts.** The reference classifies the executable `run.sh` (label `mixed`) as IMPLEMENTATION; ours said OTHER, because no rule matched. Match?
+**Answer:** Yes. `*.sh` → IMPLEMENTATION joins the rules file after `*.py`, so `config_version` changes. Whether they decide by the extension or the executable bit wasn't probed; the rule follows the extension, like every other rule.
+**Why:** A small fix inside the contract, and a shell script is code.
+
+**Defaults from other tickets, confirmed against the reference that night:**
+
+- A skipped file stays in `changes[]` (T12-Q1, built in ticket 16): confirmed by every label that skips one.
+- Lockfiles (roadmap decision 17): OTHER in `changes[]` and skipped as `UNSUPPORTED_FILE_TYPE` (T12-Q2): confirmed.
+- A symlink-to-file switch: TYPE_CHANGED on both services (label `symlink-to-file`), so ticket 05's default stands. The reverse switch differs until ticket 17 (T12-Q10).
+- Skip reasons: codes, not sentences (T12-Q2). `UNSUPPORTED_FILE_TYPE` matches; our extra `BINARY_FILE`, `FILE_TOO_LARGE` and `NOT_UTF8` stay a known difference resting on REQ-05.
+- The unknown-run 404: `{"code": "ANALYSIS_NOT_FOUND", "message": "analysis <id> does not exist"}` on both (ticket 03), for an unknown and a malformed id.
+
 ## Still open
 
 - ~~**Skipped files, skip reasons and hidden paths**~~: decided that evening (T12-Q1, T12-Q2, T12-Q8 and T12-Q9). Still to ask the pod: their full list of unsupported file types, and whether they ever skip by content.
 - **`/test` endpoints:** built from what the reference service was seen to do (above); the pod still has to confirm the semantics.
-- **Unexpected git failures:** a git call that fails in a way the connector doesn't foresee (not a timeout, a missing repository or an unknown commit) returns FastAPI's plain-text 500 instead of an `ErrorBody`, and none of the five contract codes fits. Ask the pod what code their service uses, and settle it in ticket 12 (Kaan, 2026-10-17).
+- **Unexpected git failures:** a git call that fails in a way the connector doesn't foresee (not a timeout, a missing repository or an unknown commit) returns FastAPI's plain-text 500 instead of an `ErrorBody`, and none of the five contract codes fits. Ask the pod what code their service uses (Kaan, 2026-10-17); asked in [pod-report-2026-10-17.md](pod-report-2026-10-17.md), still to settle once they answer.
 - **Repository pattern:** [M0](M0-build-order.pdf) uses `^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[\w.-]{1,100}$`, stricter than the spec's `^[A-Za-z0-9-]+/[A-Za-z0-9._-]+$`. The spec's pattern stays until the conformance run shows what the reference service accepts (Kaan, 2026-10-17). Update, later that day: the reference's captured OpenAPI document declares M0's pattern, `^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})/[A-Za-z0-9._-]{1,100}$`. The conformance case `not-a-repo` gives the same 400 under both patterns; names the two patterns disagree on (a leading hyphen, an owner over 39 characters, a name over 100) haven't been compared yet.

@@ -135,7 +135,7 @@ EXPECTED = {
         change("lib/shown.py", "RENAMED", "IMPLEMENTATION", "lib/visible.py"),
         change("misc/latin.txt", "ADDED", "DOCUMENTATION"),
         change("requirements-dev.txt", "DELETED", "OTHER"),
-        change("run.sh", "ADDED", "OTHER"),
+        change("run.sh", "ADDED", "IMPLEMENTATION"),
         change("src/app.py", "MODIFIED", "IMPLEMENTATION"),
     ], [
         skip("assets/icon.png", UNSUPPORTED),

@@ -34,13 +34,20 @@ class Status(str, Enum):
     ERROR = "ERROR"
 
 
+class IssueType(str, Enum):
+    # names what a finding claims, the two the roadmap's file-level rule can reach
+    OUTDATED_DOCUMENTATION = "OUTDATED_DOCUMENTATION"
+    MISSING_DOCUMENTATION = "MISSING_DOCUMENTATION"
+
+
 class ErrorCode(str, Enum):
-    # lists the contract's failure codes, LLM_UNAVAILABLE joins in v1.2
+    # lists the contract's failure codes, LLM_UNAVAILABLE is ours beyond the pod's
     INVALID_REQUEST = "INVALID_REQUEST"
     REPOSITORY_NOT_FOUND = "REPOSITORY_NOT_FOUND"
     COMMIT_NOT_FOUND = "COMMIT_NOT_FOUND"
     TIMEOUT = "TIMEOUT"
     WRITE_FAILED = "WRITE_FAILED"
+    LLM_UNAVAILABLE = "LLM_UNAVAILABLE"
 
 
 class AnalysisRequest(BaseModel):

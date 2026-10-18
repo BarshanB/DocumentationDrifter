@@ -6,7 +6,7 @@
 
 **Status:** done (2026-10-18). A manual run on `main` against https://documentationdrifter-production.up.railway.app/system passed every step (Actions run 39102903374): warm-up, the 23 labels for T-01 to T-07, and the conformance set. The workflow now sets DRIFTER_LABEL_CONFORMANCE=1, since tickets 16 and 17 settled the ticket 12 differences; run locally against the deploy, all 56 conformance cases with the labels matched the reference.
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 54
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 54
 
 - [x] The workflow runs on manual dispatch, with an optional schedule, and has read-only access to contents.
 - [x] Its warm-up retries health long enough to ride out a cold start of about a minute, and fails with a clear message if the service never answers.

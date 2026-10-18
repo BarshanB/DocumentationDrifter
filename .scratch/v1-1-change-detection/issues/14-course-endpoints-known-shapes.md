@@ -6,7 +6,7 @@
 
 **Status:** done (2026-10-17). Every shape was probed on the reference service first: 201 `{session_id}`, 409 for a repeated id, 400 and 404 bodies of `{message, source: "system"}` with the reference's exact messages, and `TestSetupRequest` copied field for field. Twelve error cases and a setup-then-report case joined the conformance set (the report compared by keys and value types, since the counts describe two codebases), and the first nine and the setup flow matched the reference when checked from Chrome; the other three were probed by hand with the same answers. One deliberate difference: a setup with no body answers "body is required", where the reference says " is required" with an empty field name. It is not in the conformance set until Kaan agrees to record it.
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 57
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 57
 
 - [x] Both routes are on the /system router, with request and response schemas copied from the reference service's OpenAPI, and the offline schema test covers them. (The reference declares no response schemas, so neither do we. Its document was captured on 2026-10-17 into tests/data/reference-openapi.json, checked byte for byte against a SHA-256 taken in the browser.)
 - [x] A report for an unknown session gives 404 with a body of exactly a message and source system.

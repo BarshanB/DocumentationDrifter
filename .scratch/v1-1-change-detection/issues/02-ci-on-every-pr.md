@@ -6,7 +6,7 @@
 
 **Status:** done. CI runs on every pull request; after the pipefail fix it fails red on a failing test, and the run on `kaan_v1` before the merge was green (2026-10-17).
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 53
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 53
 
 - [x] A workflow runs on every pull request. It installs the pinned requirements on a runner that has git, then runs pytest quietly from the repo root. Its only permission is read access to contents.
 - [x] The v0 suite passes there (18 pass, 1 skips without the local environment file), along with every v1 test that exists when the workflow lands. No step is specific to v1, so the fixture repo tests run there as soon as they land.

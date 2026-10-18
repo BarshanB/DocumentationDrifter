@@ -1,6 +1,6 @@
 # Report to the pod: conformance run, 2026-10-17
 
-A draft for Kaan to send. It lists what our conformance test found in the reference service (https://doc-tracker-5t4s.onrender.com/system), and the questions we still need the pod to answer. The details are in [decisions-2026-10-17.md](../decisions-2026-10-17.md).
+A draft for Kaan to send. It lists what our conformance test found in the reference service (https://doc-tracker-5t4s.onrender.com/system), and the questions we still need the pod to answer. The details are in [decisions.md](../decisions.md).
 
 ## Faults we found
 

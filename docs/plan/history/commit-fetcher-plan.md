@@ -1,10 +1,10 @@
 # Commit diff fetcher (the connector)
 
-> **History, superseded.** Kept for the reasoning behind v1.1. The current plan is the [roadmap](../roadmap.md), the [v1.1 spec](../spec-v1.1.md) and the [decision log](../decisions-2026-10-17.md); where this file disagrees with them, they win.
+> **History, superseded.** Kept for the reasoning behind v1.1. The current plan is the [roadmap](../roadmap.md), the [v1.1 spec](../../Models/v1/v1.1/spec-v1.1.md) and the [decision log](../decisions.md); where this file disagrees with them, they win.
 
 Scope: the connector in `Source/GitHub_Connector/fetch.py`. Given `owner/name`, a head commit and an optional base commit, it lists the changed files and skipped files and lets later steps read any file at either commit. It is the only code that runs git. The step-by-step reasoning is in [GitHub connector, step by step](github-connector-steps.md) (the guide); this file is the connector's interface and what is built.
 
-Revised 2026-10-17 to match the v1.1 build. The first version planned hunks, `unidiff` and COPIED changes, all dropped by the [decision log](../decisions-2026-10-17.md) (Q2, Q3), and described stubs that the v0 webhook receiver replaced.
+Revised 2026-10-17 to match the v1.1 build. The first version planned hunks, `unidiff` and COPIED changes, all dropped by the [decision log](../decisions.md) (Q2, Q3), and described stubs that the v0 webhook receiver replaced.
 
 ## Approach: git CLI first, REST later
 

@@ -6,7 +6,7 @@
 
 **Status:** done
 
-**Spec:** docs/plan/spec-v1.1.md, user stories 1, 15, 16, 17, 19, 20, 21, 38, 44
+**Spec:** docs/Models/v1/v1.1/spec-v1.1.md, user stories 1, 15, 16, 17, 19, 20, 21, 38, 44
 
 - [x] A base_commit several commits behind the head gives the changes across all of those commits, not just the head's own, and base_commit comes back as the full SHA.
 - [x] A base_commit equal to the head gives 200 SUCCESS with an empty changes[], and the run file is saved and can be fetched like any other.

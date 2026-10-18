@@ -65,7 +65,7 @@ def normalise(body: Any) -> Any:
 
 
 # names the skip reasons only our safety net gives, theirs skips by file type alone (decision T12-Q2)
-OUR_EXTRA_SKIP_REASONS = {"BINARY_FILE", "FILE_TOO_LARGE", "NOT_UTF8"}
+OUR_EXTRA_SKIP_REASONS = {"BINARY_FILE", "FILE_TOO_LARGE", "NOT_UTF8", "OVER_DOC_BUDGET"}
 
 
 def _hidden(path: str | None) -> bool:

@@ -50,8 +50,9 @@ def test_size_cap_is_exact(api, make_repo):
     repo.commit({"seed": "0\n"})
     head = repo.commit({"big.txt": b"a" * MB + b"\n", "fits.txt": b"a" * (MB - 1) + b"\n"})
     body = analyse(api, head)
-    assert paths(body["skipped"]) == ["big.txt"]
     assert reason_for(body, "big.txt") == "FILE_TOO_LARGE"
+    # fits.txt is under the file cap but a doc far past the drift check's budget (v1.2)
+    assert reason_for(body, "fits.txt") == "OVER_DOC_BUDGET"
     assert paths(body["changes"]) == ["big.txt", "fits.txt"]
 
 
@@ -71,11 +72,12 @@ def test_deleted_binary_is_still_skipped(api, make_repo):
     assert [(c["path"], c["change_type"]) for c in body["changes"]] == [("logo.png", "DELETED")]
 
 
-def test_unchanged_binary_and_big_files_are_not_skipped(api, make_repo):
+def test_unchanged_files_are_not_read_unless_the_doc_budget_reports_them(api, make_repo):
     repo = make_repo()
     repo.commit({"logo.png": PNG, "big.txt": b"a" * (2 * MB)})
     body = analyse(api, repo.commit({"readme": "changed\n"}))
-    assert body["skipped"] == []
+    # the image is nobody's business, the unchanged doc is named because the check never saw it (v1.2)
+    assert body["skipped"] == [{"path": "big.txt", "reason": "OVER_DOC_BUDGET"}]
     assert paths(body["changes"]) == ["readme"]
 
 

@@ -87,9 +87,9 @@ In v1.2, AC-10 and the conformance test still require `changes[]` to match exact
 
 `Finding` keeps the pod's shape with no confidence field; the LLM's reasoning goes in `explanation` (Kaan, 2026-10-17).
 
-The LLM gets every DOCUMENTATION file at head, up to a 200 KB total (a config value); docs past the cap go to `skipped[]` with an "over doc budget" reason (Kaan, 2026-10-17).
+The LLM gets every DOCUMENTATION file at head, up to a 200 KB total (a config value); docs past the cap go to `skipped[]` as `OVER_DOC_BUDGET` (Kaan, 2026-10-17; the reason settled 2026-10-18). Only readable text counts: an unsupported extension, a binary file or one that is not UTF-8 never reaches the prompt, and an untouched one is left out with no record.
 
-**Open for the v1.2 grilling (T12-Q7).** Since T12-Q2, skip reasons are codes (`UNSUPPORTED_FILE_TYPE`, `BINARY_FILE`, `FILE_TOO_LARGE`, `NOT_UTF8`): should the doc-budget reason become `OVER_DOC_BUDGET` to match?
+**Settled at the v1.2 grilling (T12-Q7, 2026-10-18).** The doc-budget reason is the code `OVER_DOC_BUDGET`, matching the other four.
 
 **Goal.** For any input, our service gives the same answer as the pod's service, apart from `analysis_id` and `created_at`. In v1.1 `issues[]` is empty on purpose; v1.2 fills it from the LLM, and from then on only `changes[]` must match the pod exactly.
 

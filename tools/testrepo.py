@@ -85,6 +85,7 @@ def skip(path, reason):
 
 
 UNSUPPORTED, BINARY, TOO_LARGE, NOT_UTF8 = "UNSUPPORTED_FILE_TYPE", "BINARY_FILE", "FILE_TOO_LARGE", "NOT_UTF8"
+OVER_BUDGET = "OVER_DOC_BUDGET"
 
 # maps each label to (head, base or None, changes, skipped), written by hand to check intent
 EXPECTED = {
@@ -149,7 +150,9 @@ EXPECTED = {
         skip("mixlink", UNSUPPORTED),
         skip("vendor/other", UNSUPPORTED),
     ]),
-    "deleted": ("deleted", None, [change("docs/guide.md", "DELETED", "DOCUMENTATION")], []),
+    # data/huge.txt stands unchanged here, a doc past the budget, so v1.2 reports it unchecked
+    "deleted": ("deleted", None, [change("docs/guide.md", "DELETED", "DOCUMENTATION")],
+                [skip("data/huge.txt", OVER_BUDGET)]),
     "base-equals-head": ("docs-category", "docs-category", [], []),
     "explicit-base-range": ("renamed", "root", [
         change("Makefile", "DELETED", "OTHER"),

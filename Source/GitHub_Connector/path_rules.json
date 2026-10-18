@@ -11,5 +11,5 @@
     {"pattern": "*.sh", "category": "IMPLEMENTATION"}
   ],
   "fallback": "OTHER",
-  "unsupported": [".ai", ".html", ".lock", ".png", ".svg"]
+  "unsupported": [".ai", ".html", ".lock", ".pdf", ".png", ".svg"]
 }

@@ -1,16 +1,16 @@
-# DocumentationDrifter: the end product and where each part lands
+# DocumentationDrifter: the product vision and where each part lands
 
 > **History, superseded.** Kept for the reasoning behind v1.1. The current plan is the [roadmap](../roadmap.md), the [v1.1 spec](../../Models/v1/v1.1/spec-v1.1.md) and the [decision log](../decisions.md); where this file disagrees with them, they win.
 
-The Phase 2 spec ([docs/endProduct/](../../endProduct/README.md), the pod's specification) and schema v14 ([pdf](../../endProduct/documentation-tracker-schema-v14.pdf)) describe the **end product**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it.
+The Phase 2 spec ([docs/vision/](../../vision/README.md), the pod's specification) and schema v14 ([pdf](../../vision/documentation-tracker-schema-v14.pdf)) describe the **product vision**, not v1 or v2. This file keeps that picture in one place and says which version builds each part, and where a later decision changed it.
 
-**Inspiration, not a blueprint.** The versions take ideas from the end product but don't have to match it exactly. Building iteratively means each version can simplify, reorder or drop parts of it as the team learns, and section 2 lists where that has already happened. When a version is meant to build part of the end product, the roadmap names the version (v1.1, v1.2, v2 and so on); anything not named there is not yet planned. The [roadmap](../roadmap.md) is the plan to follow; the [decision log](../decisions.md) has the reasons. Terms are as in [CONTEXT.md](../../../CONTEXT.md).
+**Inspiration, not a blueprint.** The versions take ideas from the product vision but don't have to match it exactly. Building iteratively means each version can simplify, reorder or drop parts of it as the team learns, and section 2 lists where that has already happened. When a version is meant to build part of the product vision, the roadmap names the version (v1.1, v1.2, v2 and so on); anything not named there is not yet planned. The [roadmap](../roadmap.md) is the plan to follow; the [decision log](../decisions.md) has the reasons. Terms are as in [CONTEXT.md](../../../CONTEXT.md).
 
 Revised 2026-10-17 to match the decisions and the v1.1 build. The first version of this file was a snapshot of `main` at `5b74560`.
 
-## 1. The end product, in one paragraph
+## 1. The product vision, in one paragraph
 
-A read-only service, called by a GitHub Action on every push and pull request, that works out what changed between two commits of a public repo and flags documentation that is now missing or outdated. It does this through a living map between doc sections and the code they describe (the "sectioning" of the end product's §7.2 and schema v14). Every finding is `PENDING_REVIEW` until an authorised human confirms or dismisses it. The decision, reviewer and timestamp are recorded, and the tool never edits code or docs. Each run is saved as one JSON file that can be fetched back unchanged. The final version is deterministic: the same inputs give the same findings.
+A read-only service, called by a GitHub Action on every push and pull request, that works out what changed between two commits of a public repo and flags documentation that is now missing or outdated. It does this through a living map between doc sections and the code they describe (the "sectioning" of the product vision's §7.2 and schema v14). Every finding is `PENDING_REVIEW` until an authorised human confirms or dismisses it. The decision, reviewer and timestamp are recorded, and the tool never edits code or docs. Each run is saved as one JSON file that can be fetched back unchanged. The final version is deterministic: the same inputs give the same findings.
 
 ## 2. What changed since Phase 2
 
@@ -26,13 +26,13 @@ A read-only service, called by a GitHub Action on every push and pull request, t
 | `POST /analyze`, `GET /analysis/{id}` | The same under `/system`, plus `GET /system/health` | Reference service |
 | Per-user sign-in and storage, job queues, repos that sleep and wake (§7.3, `WebHookConnectors.png`, now only in git at `48e145e`) | **v4**, only by conscious choice | Roadmap v4; the tester calls a stateless API |
 | A documentation viewer in Phase 3 (§6.1) | A minimal read-only viewer in **v3**, only if the course still requires it | Roadmap v3 item 5 |
-| User notifications in Phase 5 | **v4**; the end product's §6.4 names them as the first thing to cut | Roadmap v4 |
+| User notifications in Phase 5 | **v4**; the product vision's §6.4 names them as the first thing to cut | Roadmap v4 |
 | The Action uses `github.sha` as head and the PR base as base | Head is `pull_request.head.sha` and base is the merge base, read from GitHub's compare endpoint, in **v3** | Decision 15 ([graphs](../decisions.md#decision-15-the-base-for-a-push-that-creates-a-branch-2026-10-17)), guide step 3 |
 | Mapping file `.doctracker.yml` | `doctracker.yml`, because the hidden-path rule would drop a dot-file | Guide step 4 |
 
 ## 3. Phase 2's review notes and how they were settled
 
-The review notes at the end of [endProduct.txt](../../endProduct/endProduct.txt) list twelve inconsistencies to fix before the next phase.
+The review notes at the end of [phase2-specification.txt](../../vision/phase2-specification.txt) list twelve inconsistencies to fix before the next phase.
 
 | # | Note | Settled as |
 |---|---|---|
@@ -67,7 +67,7 @@ The review notes at the end of [endProduct.txt](../../endProduct/endProduct.txt)
 
 ## 5. Sectioning, kept for after v2
 
-This is schema v14's model, the "living map" of the end product's §7.2. It stays out until Kaan schedules it.
+This is schema v14's model, the "living map" of the product vision's §7.2. It stays out until Kaan schedules it.
 
 - **Snapshot** of the repo at one commit: a folder tree, doc sections, code symbols and code-to-code dependencies.
 - **DocSection:** one Markdown heading and everything under it, keyed by `doc_path` and `heading_path`, with line spans. Each file also has a whole-file section.

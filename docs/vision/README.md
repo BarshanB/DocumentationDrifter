@@ -1,4 +1,4 @@
-# End product
+# Product vision
 
 > **Inspiration, not a blueprint.** This folder describes where Documentation Tracker could end up after every phase. It is not the plan for the next version and not a checklist. **Most of the requirements, acceptance criteria and specs in here will not be available in most versions.** Some arrive much later, and some may never be built the way they are written. Use the folder to understand **why the system exists** and **the constraints it works under**, then take whatever ideas help the version you are building.
 >
@@ -8,14 +8,14 @@
 
 | File | What it is |
 |---|---|
-| [endProduct.txt](endProduct.txt) | The Phase 2 specification (Teams 15 and 16) as plain text, section by section, with a `[DIAGRAM]` line wherever the original shows a figure. Its last section lists where the specification contradicts itself. |
+| [phase2-specification.txt](phase2-specification.txt) | The Phase 2 specification (Teams 15 and 16) as plain text, section by section, with a `[DIAGRAM]` line wherever the original shows a figure. Its last section lists where the specification contradicts itself. |
 | [01-system-boundary.png](01-system-boundary.png) | Who is inside the tracker, who is outside, and what crosses the line (section 2.1) |
 | [02-M1-data-flow-and-context.png](02-M1-data-flow-and-context.png) | M1: the data path from a push or an API call to the evidence store |
 | [03-M2-analysis-run-lifecycle.png](03-M2-analysis-run-lifecycle.png) | M2: every way one analysis request can end |
 | [04-M3-file-level-finding-rule.png](04-M3-file-level-finding-rule.png) | M3: when one changed file produces a finding, and of which type |
 | [05-M4-run-file-schema.png](05-M4-run-file-schema.png) | M4: the request, the run file and the error body every team must share |
 | [06-M5-finding-review-workflow.png](06-M5-finding-review-workflow.png) | M5: where a finding goes and how a person's decision is recorded |
-| [documentation-tracker-schema-v14.pdf](documentation-tracker-schema-v14.pdf) | Schema v14: the team's fuller data model for the end product (snapshots, the doc-to-code map, sections and symbols). Not built in v1; the roadmap moves its mapping to later versions (v2 and beyond). |
+| [documentation-tracker-schema-v14.pdf](documentation-tracker-schema-v14.pdf) | Schema v14: the team's fuller data model for the product vision (snapshots, the doc-to-code map, sections and symbols). Not built in v1; the roadmap moves its mapping to later versions (v2 and beyond). |
 
 Read the diagrams in that order: the boundary first, then a request's path through the models. This folder replaces the original phase2.pdf, which was removed from the repo on 2026-10-17.
 

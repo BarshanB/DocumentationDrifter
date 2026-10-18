@@ -6,7 +6,7 @@ Kaan answered eighteen questions about v1 on 2026-10-17. Each entry gives the qu
 
 ## Scope and the LLM
 
-**Q1 · LLM at runtime.** Should v1 keep the LLM out of the running system, as [the end product](../endProduct/README.md) §7, §8.2 and §9.1 say?
+**Q1 · LLM at runtime.** Should v1 keep the LLM out of the running system, as [the product vision](../vision/README.md) §7, §8.2 and §9.1 say?
 **Answer:** No. An LLM is the component that decides drift.
 **Why:** Kaan's direction for the project is that the LLM makes the drift call. This overrides the spec's "GenAI will not be part of the running system".
 
@@ -174,7 +174,7 @@ This affects the v3 GitHub Action and the v4 webhook, which decide what base to 
 
 ### Before: the schema's literal reading
 
-[Schema v14](../endProduct/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and the end product's M4 ([diagram](../endProduct/05-M4-run-file-schema.png)) has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
+[Schema v14](../vision/documentation-tracker-schema-v14.pdf) defines a first audit as an analysis with no base snapshot, and the product vision's M4 ([diagram](../vision/05-M4-run-file-schema.png)) has the Action send "push before". Read together, a push that creates a branch would be a first audit. The v0 receiver (`Source/GitHub_Connector/parse.py`) was written that way.
 
 ```mermaid
 flowchart TD
@@ -234,7 +234,7 @@ When the default branch is first created and its head is a root commit, the Acti
 
 - **Unchanged:** a first audit still means an analysis with no base.
 - **Clarified:** when one happens. A first audit happens only when the head is a root commit. A push that creates a branch compares against the merge base with the default branch.
-- **Refined in the end product's M4:** "Action: PR base or push before" becomes the merge base for pull requests (decision 10), for force pushes, and for new branches (this decision). For a normal push, it stays the push's `before`.
+- **Refined in the product vision's M4:** "Action: PR base or push before" becomes the merge base for pull requests (decision 10), for force pushes, and for new branches (this decision). For a normal push, it stays the push's `before`.
 
 ### Where it is recorded
 

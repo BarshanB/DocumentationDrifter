@@ -1,5 +1,5 @@
 ====================================================================================================
-DOCUMENTATION TRACKER: THE END PRODUCT
+DOCUMENTATION TRACKER: THE PRODUCT VISION
 Text version of phase2.pdf (Phase 2 specification, Teams 15 and 16).
 The six diagrams are separate files in this folder.
 ====================================================================================================
@@ -91,7 +91,7 @@ Q2 COMMON SCOPE AND COST ESTIMATE
 2.1 SYSTEM BOUNDARY
 
 [DIAGRAM] Diagram 01: common system boundary (who is inside the tracker, who is outside, and what crosses the line)
-          open docs/endProduct/01-system-boundary.png
+          open docs/vision/01-system-boundary.png
 
 2.2 SYSTEM BOUNDARY
 
@@ -245,19 +245,19 @@ are also excluded.
 3.2 BEHAVIORAL AND INFORMATION MODELS
 
 [DIAGRAM] Diagram 02 (M1): system overview, v1 boundary and data path
-          open docs/endProduct/02-M1-data-flow-and-context.png
+          open docs/vision/02-M1-data-flow-and-context.png
 
 [DIAGRAM] Diagram 03 (M2): analysis run lifecycle (finite-state model)
-          open docs/endProduct/03-M2-analysis-run-lifecycle.png
+          open docs/vision/03-M2-analysis-run-lifecycle.png
 
 [DIAGRAM] Diagram 04 (M3): file-level finding rule (decision / policy model)
-          open docs/endProduct/04-M3-file-level-finding-rule.png
+          open docs/vision/04-M3-file-level-finding-rule.png
 
 [DIAGRAM] Diagram 05 (M4): v1 run file (entity / schema model)
-          open docs/endProduct/05-M4-run-file-schema.png
+          open docs/vision/05-M4-run-file-schema.png
 
 [DIAGRAM] Diagram 06 (M5): finding review in v1 (workflow model)
-          open docs/endProduct/06-M5-finding-review-workflow.png
+          open docs/vision/06-M5-finding-review-workflow.png
 
 3.3 MODEL EXPLANATION
 

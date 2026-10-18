@@ -41,7 +41,7 @@ The roadmap says v1 lives "in `Source/GitHub_Connector/` next to the v0 webhook 
 
 ### What the Action should be
 
-The spec already chooses this: "Our team will build workflows to call the web service" (the end product, §8.1). So the v3 Action is a **thin HTTP client of `POST /system/analyze`**. It works out head and base from the event, sends a normal `AnalysisRequest`, and reports the result. The shared contract does not change, the run is saved where `GET /system/analysis/{id}` and the v3 review loop can find it, and conformance with the pod holds by construction.
+The spec already chooses this: "Our team will build workflows to call the web service" (the product vision, §8.1). So the v3 Action is a **thin HTTP client of `POST /system/analyze`**. It works out head and base from the event, sends a normal `AnalysisRequest`, and reports the result. The shared contract does not change, the run is saved where `GET /system/analysis/{id}` and the v3 review loop can find it, and conformance with the pod holds by construction.
 
 There is a second mode for later: run our code inside the runner against the repo's own checkout. That scales better (each repo's runner pays), has no cold start and can read private repos. But its runs never reach our service, so they can't be reviewed or listed. Keep it as a v4 option. The `analyze()` seam below makes it cheap to add then.
 
@@ -188,7 +188,7 @@ Kaan chose "Apply all" on 2026-10-17, so items 1 to 3 are now in the roadmap, th
 ## Sources
 
 - **Code:** `Source/GitHub_Connector/*.py` and `tests/*.py` at `76eb691`. Test run: `python3 -m pytest -q` gave 18 passed and 1 skipped.
-- **Spec:** the end product ([endProduct.txt](../../endProduct/endProduct.txt)) §5.3, §6.1, §6.3, §7.3, §8.1–8.2 and review notes 9–11. Also [M0-build-order.pdf](../history/M0-build-order.pdf).
+- **Spec:** the product vision ([phase2-specification.txt](../../vision/phase2-specification.txt)) §5.3, §6.1, §6.3, §7.3, §8.1–8.2 and review notes 9–11. Also [M0-build-order.pdf](../history/M0-build-order.pdf).
 - **GitHub docs:**
   - Events that trigger workflows (pull_request `GITHUB_SHA` is the merge commit, the default activity types, read-only token on fork PRs).
   - Securely using pull_request_target.

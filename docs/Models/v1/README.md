@@ -37,4 +37,4 @@ All v1 code goes in `Source/GitHub_Connector/`, in new modules beside the v0 fil
 
 ## Source and pictures
 
-The Mermaid block in each `.md` file is the model, and GitHub renders it inline. The PNG pictures in [rendered/](rendered/) are generated from those blocks, so after editing a block, regenerate its PNG instead of editing the picture by hand: run `mmdc` from `@mermaid-js/mermaid-cli` on the block with a `.png` output, or paste the block into mermaid.live and export a PNG.
+The Mermaid block in each `.md` file is the model, and GitHub renders it inline. The PNG pictures in [rendered/](rendered/) are generated from those blocks (M4 has none: read it on GitHub, which draws its block), so after editing a block, regenerate its PNG instead of editing the picture by hand: run `mmdc` from `@mermaid-js/mermaid-cli` on the block with a `.png` output, or paste the block into mermaid.live and export a PNG.

@@ -21,10 +21,11 @@ flowchart TD
   R2 -->|"yes"| DOC["DOCUMENTATION"]
   R2 -->|"no"| R3{"src/** · tests/** · *.py?"}
   R3 -->|"yes"| IMP["IMPLEMENTATION"]
-  R3 -->|"no"| OTH
+  R3 -->|"no"| OTH2["OTHER"]
   DOC --> CH["changes[] entry · REQ-01"]
   IMP --> CH
   OTH --> CH
+  OTH2 --> CH
   U -->|"yes"| SKU["skipped[] · UNSUPPORTED_FILE_TYPE"]
   U -->|"no"| B{"Binary, over 1 MB,<br/>or not UTF-8?"}
   B -->|"yes"| SKC["skipped[] · BINARY_FILE,<br/>FILE_TOO_LARGE or NOT_UTF8 · REQ-05"]

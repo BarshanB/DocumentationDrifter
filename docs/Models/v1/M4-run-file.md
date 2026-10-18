@@ -38,7 +38,7 @@ erDiagram
   }
   Skipped {
     string path "repo-relative"
-    string reason "binary, too large, not UTF-8, or over doc budget (v1.2)"
+    string reason "UNSUPPORTED_FILE_TYPE BINARY_FILE FILE_TOO_LARGE NOT_UTF8, or over doc budget (v1.2); path also in changes[]"
   }
   ErrorBody {
     string code "INVALID_REQUEST REPOSITORY_NOT_FOUND COMMIT_NOT_FOUND TIMEOUT WRITE_FAILED LLM_UNAVAILABLE (v1.2)"
@@ -71,4 +71,4 @@ erDiagram
 
 - **Representation.** Six records copied field for field from the pod's live OpenAPI, with two deliberate differences: DOCUMENTATION is added to the category enum, and `LLM_UNAVAILABLE` to the error codes from v1.2, as Kaan decided. `Finding` keeps the pod's shape with no confidence field. `Review` is a seventh record, ours until it is agreed with the pod.
 - **Property.** One successful request produces one file, written once and never edited (REQ-04). All lists are sorted by path, so in v1.1 three runs on the same inputs differ only in `analysis_id` and `created_at` (REQ-07). From v1.2 the LLM is probabilistic, so `issues[]` may also differ; `changes[]` and `skipped[]` still may not.
-- **Checked by.** AC-06 (a separate JSON file with repo, commits, status and findings), AC-10 (repeat runs compare equal), and the conformance test, which expects differences only in `category` for doc files and in `config_version`.
+- **Checked by.** AC-06 (a separate JSON file with repo, commits, status and findings), AC-10 (repeat runs compare equal), and the conformance test, which allows differences only in `category` for doc files, in `config_version` and `tool_version`, and in the named known differences in the decision log (our extra skips for oversize and non-UTF-8 files, their hidden paths, and two messages).

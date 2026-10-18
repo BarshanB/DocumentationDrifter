@@ -17,7 +17,7 @@ Written 2026-10-16 against `main` @ `76eb691`. Revised the same day after probin
 3. **Keep humans in charge.** Every finding is `PENDING_REVIEW`. The tool never edits the repo or its docs (REQ-03, REQ-06).
 4. **Leave evidence.** Each run is saved as one JSON file that can be fetched back unchanged (REQ-04).
 5. **Fail loudly and repeatably.** Bad input or an incomplete check returns an error, never a fake success. The same inputs give the same output (REQ-05, REQ-07).
-6. **Stay simple.** An LLM decides drift from v1.2, probabilistic until the final version, which is deterministic (decision 4, overriding spec §8.2). Keep dependencies minimal (`Skills/CLAUDE.md`).
+6. **Stay simple.** An LLM decides drift from v1.2, probabilistic until the final version, which is deterministic (decision 4, overriding spec §8.2). Keep dependencies minimal (`AGENTS.md`).
 7. **Match the pod's contract byte for byte.** The pod's live service is now the reference implementation. Both teams are tested against the same tester and the same repos (spec §5.3), so any difference from it counts as a bug unless the pod agrees to change it.
 
 ---
@@ -220,7 +220,7 @@ The guide predates the pod's live service. In these three places v1 follows the 
 
 ## v4 and later (only by conscious choice)
 
-Each of these stays out until Kaan decides to add it (per `Skills/CLAUDE.md`):
+Each of these stays out until Kaan decides to add it (per `AGENTS.md`):
 
 - Section- and symbol-level mapping from schema v14 (`heading_path`, `path::name` selectors, hunk overlap, 1-hop dependencies). This needs the pod to extend `Finding`.
 - A GitHub App with per-user sign-in and repo "sleep/revive" (the original outline in `store.py` at `5b74560` and the webhook-connector outline, `WebHookConnectors.png`, removed from the repo and kept in git at `48e145e`).

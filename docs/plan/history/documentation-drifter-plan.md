@@ -102,7 +102,7 @@ The connector's `tree()` and `read()` already give it what it reads from git.
 - **Tests:** `pytest` with FastAPI's `TestClient` against the real app. Fixture repos are built with git under `tmp_path`, plus the labelled test repo from `tools/testrepo.py`.
 - **CI:** `.github/workflows/ci.yml` on every PR. `acceptance.yml` checks the deployed service on demand.
 - **Hosting:** a Dockerfile with git, deployed to Railway's free plan (`railway.toml`, decision 8).
-- **Not added, by choice** (`Skills/CLAUDE.md`, minimal first): `pyproject.toml`, `ruff` and `mypy`.
+- **Not added, by choice** (`AGENTS.md`, minimal first): `pyproject.toml`, `ruff` and `mypy`.
 
 ## 8. Left out until someone decides otherwise
 

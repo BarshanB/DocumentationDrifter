@@ -631,7 +631,7 @@ function render() { renderHeader(); renderList(); renderDetail(); }
 function demo() {
   const sha = n => n.repeat(40).slice(0, 40);
   repos = [
-    { repo:"facebook/react",    base:sha("c13b4f8e912a"), state:"changes", count:14, runId:"an-3f9c1a74d2e84bf2a6c0d831e57ab904" },
+    { repo:"facebook/react",    base:sha("c13b4f8e912a"), state:"changes", count:16, runId:"an-3f9c1a74d2e84bf2a6c0d831e57ab904" },
     { repo:"vercel/next.js",    base:sha("a1b2c3d4"), state:"analyzing", since: now() - 4000 },
     { repo:"torvalds/linux",    base:sha("9f8e7d6c"), state:"watching", checked: now() - 12000 },
     { repo:"honojs/hono",       base:sha("9f8e7d6c"), state:"ok" },
@@ -655,26 +655,28 @@ const DEMO_RUN = {
   repository:"facebook/react",
   head_commit:"c13b4f8e912ac13b4f8e912ac13b4f8e912ac13b",
   base_commit:"72d9a86cb78072d9a86cb78072d9a86cb78072d9",
-  config_version:"mapping-v1", tool_version:"1.1.0", status:"SUCCESS", error:null, issues:[],
+  config_version:"d07d09d08621", tool_version:"1.1.0", status:"SUCCESS", error:null, issues:[],
   changes:[
-    { path:"docs/README.md", old_path:null, change_type:"ADDED", category:"OTHER" },
-    { path:"docs/learn/escape-hatches.md", old_path:"docs/learn/synchronizing-with-effects.md", change_type:"RENAMED", category:"DESIGN" },
-    { path:"docs/legacy/context.md", old_path:null, change_type:"DELETED", category:"OTHER" },
-    { path:"docs/reference/react/StrictMode.md", old_path:null, change_type:"MODIFIED", category:"SPECIFICATION" },
+    { path:"docs/README.md", old_path:null, change_type:"ADDED", category:"DOCUMENTATION" },
+    { path:"docs/learn/escape-hatches.md", old_path:"docs/learn/synchronizing-with-effects.md", change_type:"RENAMED", category:"DOCUMENTATION" },
+    { path:"docs/legacy/context.md", old_path:null, change_type:"DELETED", category:"DOCUMENTATION" },
+    { path:"docs/reference/react/StrictMode.md", old_path:null, change_type:"MODIFIED", category:"DOCUMENTATION" },
     { path:"docs/reference/react/use.md", old_path:null, change_type:"MODIFIED", category:"DOCUMENTATION" },
     { path:"docs/reference/react/useEffectEvent.md", old_path:null, change_type:"ADDED", category:"DOCUMENTATION" },
-    { path:"docs/reference/rsc/server-components.md", old_path:null, change_type:"ADDED", category:"REQUIREMENT" },
-    { path:"packages/react/package.json", old_path:null, change_type:"MODIFIED", category:"REQUIREMENT" },
-    { path:"packages/react/src/ReactAct.js", old_path:null, change_type:"MODIFIED", category:"IMPLEMENTATION" },
-    { path:"packages/react/src/ReactClient.js", old_path:null, change_type:"MODIFIED", category:"IMPLEMENTATION" },
-    { path:"packages/react/src/ReactHooks.js", old_path:null, change_type:"MODIFIED", category:"IMPLEMENTATION" },
-    { path:"packages/react/src/ReactServer.js", old_path:null, change_type:"MODIFIED", category:"ARCHITECTURE" },
-    { path:"packages/react/src/ReactSharedInternalsClient.js", old_path:null, change_type:"MODIFIED", category:"ARCHITECTURE" },
-    { path:"packages/react/src/__tests__/ReactProfiler-test.js", old_path:null, change_type:"TYPE_CHANGED", category:"SPECIFICATION" }
+    { path:"docs/reference/rsc/server-components.md", old_path:null, change_type:"ADDED", category:"DOCUMENTATION" },
+    { path:"docs/static/react-logo.png", old_path:null, change_type:"ADDED", category:"DOCUMENTATION" },
+    { path:"fixtures/bundle/react-dom.production.min.js", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/package.json", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/src/ReactAct.js", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/src/ReactClient.js", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/src/ReactHooks.js", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/src/ReactServer.js", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/src/ReactSharedInternalsClient.js", old_path:null, change_type:"MODIFIED", category:"OTHER" },
+    { path:"packages/react/src/__tests__/ReactProfiler-test.js", old_path:null, change_type:"TYPE_CHANGED", category:"OTHER" }
   ],
   skipped:[
-    { path:"docs/static/react-logo.png", reason:"binary file" },
-    { path:"fixtures/bundle/react-dom.production.min.js", reason:"file larger than 1 MB" }
+    { path:"docs/static/react-logo.png", reason:"UNSUPPORTED_FILE_TYPE" },
+    { path:"fixtures/bundle/react-dom.production.min.js", reason:"FILE_TOO_LARGE" }
   ],
   created_at:"2026-10-17T14:22:08.431Z"
 };

@@ -1,4 +1,4 @@
-# serves only the v1 /system app, with git installed and no credentials baked in
+# serves the v1 /system app and the console at /, with git installed and no credentials baked in
 
 FROM python:3.12-slim
 

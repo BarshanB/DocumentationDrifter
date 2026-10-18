@@ -1,10 +1,12 @@
-# serves the v1 API under /system: analyze and the run store, plus the course routes from course.py
+# serves the v1 API under /system: analyze and the run store, plus the course routes from course.py, and the console at /
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import APIRouter, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from GitHub_Connector import course, runs
 from GitHub_Connector.analysis import analyze
@@ -31,10 +33,13 @@ _ERRORS = {400: {"model": ErrorBody}, 404: {"model": ErrorBody}, 500: {"model": 
 app = FastAPI(
     title="DocumentationDrifter",
     openapi_url="/system/openapi.json",
-    docs_url=None,  # serves only the contract's routes, no docs pages
+    docs_url=None,  # serves the contract's routes and the console, no docs pages
     redoc_url=None,
 )
 router = APIRouter(prefix="/system")
+
+# finds the console page beside the connector, Source/ ships whole in the image
+CONSOLE = Path(__file__).resolve().parents[1] / "Frontend" / "index.html"
 
 
 def _json(data: bytes, status: int = 200) -> Response:
@@ -105,6 +110,12 @@ def index() -> dict:
 def health() -> dict[str, str]:
     # answers the warm-up call, does no git work
     return {"status": "ok", "storage": "local"}
+
+
+@app.get("/", include_in_schema=False)
+def console() -> FileResponse:
+    # serves the console page, kept out of the OpenAPI document so the contract stays the same
+    return FileResponse(CONSOLE, media_type="text/html")
 
 
 router.include_router(course.router)

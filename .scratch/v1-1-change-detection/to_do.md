@@ -14,6 +14,10 @@ Items from the 2026-10-17 review of v1.1, left for later. Open questions for the
 - **coverage.py internals.** The report counts statements through `coverage.python.PythonFileReporter`, which coverage.py doesn't document as public. The `coverage==7.6.10` pin holds it; check it on any upgrade.
 - **Process-wide monitoring.** Each setup calls `sys.monitoring.restart_events()`, which re-arms every muted line in the process for every monitoring tool. Harmless in the deployed app, but a debugger or coverage run attached to the server would see it.
 
+## Console, left for a complete solution
+
+- **The console's GitHub budget** (ticket 18, Q12). Each viewer's browser polls `api.github.com` on its own unauthenticated limit of 60 calls an hour, about 5 watched repos at the default 300 s. Past it the page pauses until the reset; the backend never sees it.
+
 ## Skipped for now
 
 - **Clone failures that aren't "not found"** (review finding e). Every failed clone becomes 404 `REPOSITORY_NOT_FOUND`, including a DNS failure, a GitHub outage or a full disk. A failed fetch by SHA becomes `COMMIT_NOT_FOUND`. Use the 404s only when git reports a missing repository or commit, and settle the code for every other failure together with the open "unexpected git failures" item in the decision log (ticket 12).

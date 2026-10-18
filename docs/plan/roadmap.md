@@ -140,7 +140,9 @@ The guide predates the pod's live service. In these three places v1 follows the 
 | Missing or private repo (step 2, error table) | `REPO_NOT_FOUND` / `REPO_NOT_ACCESSIBLE` | `REPOSITORY_NOT_FOUND`, HTTP 404. | That is the code the pod's service returns. |
 | `TIMEOUT` HTTP code (error table) | 500, or 200 + ERROR, pending the pod. | 500 with an `ErrorBody` and nothing saved, the same as other failures before a run file exists. | The pod's service answers failures with `{code, message}` and no saved run. |
 
-**Deliberately left out of v1:** the REST fallback (our Docker image ships git, so it isn't needed yet), the mapping loader (v1.3 if time allows, otherwise v2), review, PR comments, a UI, section and symbol selectors, and tree-sitter.
+**Deliberately left out of v1:** the REST fallback (our Docker image ships git, so it isn't needed yet), the mapping loader (v1.3 if time allows, otherwise v2), review, PR comments, a UI beyond the basic console, section and symbol selectors, and tree-sitter.
+
+**A basic UI is in v1 (Kaan, 2026-10-18; [decision log](decisions.md), ticket 18).** The v1 app serves the console in `Source/Frontend/` at `/`, outside the `/system` contract, and `ui.py` still runs it against an API elsewhere. It calls only `POST /system/analyze` and `GET /system/analysis/{id}`, so it works against v1.1 unchanged and shows v1.2's `issues[]` once they are filled. Anything richer, such as run history, stays in v2.
 
 **Acceptance criteria for v1**
 
@@ -204,7 +206,7 @@ The guide predates the pod's live service. In these three places v1 follows the 
    - **Distribution.** If our repo stays private, public repos can't `uses:` an action from it, so ship a copy-paste workflow template or publish from a public repo.
 3. **Review recording.** `POST /system/analysis/{id}/review` (or PR-comment replies read back) stores the decision, the reviewer and a timestamp alongside the run. The run file itself is never rewritten. Agree on the shape with the pod first, because it extends the shared contract.
 4. ~~**Connect v0's webhook** to `analyze()`~~ Moved to v4 (decision 14). The Action covers push and PR events, and on the free tier a webhook sent while the service sleeps is lost.
-5. **Run history**: list past runs for a repo. A minimal read-only viewer page goes here if the course still requires the Phase 3 "documentation viewer". The pod's service has no UI either.
+5. **Run history**: list past runs for a repo, shown in the v1 console (served at `/` since ticket 18) if the course still requires the Phase 3 "documentation viewer". The pod's service has no UI.
 6. **Safety hardening**: anonymous access, timeouts and the 1 MB file cap already ship in v1. v3 adds a cap on the number of changed files and on repo size.
 
 **Acceptance criteria for v3**

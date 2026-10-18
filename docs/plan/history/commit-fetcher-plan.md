@@ -43,7 +43,7 @@ SkippedFile
 
 - `deadline` is a `time.monotonic()` value from `analyze()`. Any git call after it fails with `TIMEOUT`.
 - COPIED is in the contract's enum but never produced, because only `-M` is used (Q3).
-- There are no hunks. They come back with section-level mapping (after v2; see the [end-product plan](documentation-drifter-plan.md)).
+- There are no hunks. They come back with section-level mapping (after v2; see the [product vision plan](documentation-drifter-plan.md)).
 - v1.2 uses `read()` to send the changed code and docs to the LLM. v1.3 or v2 uses it to read the mapping file.
 
 ## Steps inside `fetch`

@@ -53,7 +53,7 @@ There is a second mode for later: run our code inside the runner against the rep
 | Run store as `save(id, bytes)` and `load(id)` plus one `dump(result)` serializer | Slice 9 | v3 swaps local disk for a durable store by changing one module. One serializer keeps `GET` byte-identical (AC-06) |
 | A `with fetch(repo, head, base) as cmp:` scope that deletes the clone on exit | Slices 3–7 | v2 detection reads the mapping file at base and head inside the same scope, instead of re-cloning |
 
-Build nothing else for Actions in v1. Checkout mode, a CLI and `pyproject.toml` are flagged as missing, not built, per `Skills/CLAUDE.md`.
+Build nothing else for Actions in v1. Checkout mode, a CLI and `pyproject.toml` are flagged as missing, not built, per `AGENTS.md`.
 
 ### The one Actions piece that is in Phase 3 scope
 
